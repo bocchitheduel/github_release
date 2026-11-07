@@ -1,0 +1,6 @@
+{
+  "step": 10000,
+  "train_loss": 1.4068710803985596,
+  "val_loss": 1.3767677545547485,
+  "checkpoint": "./runs/b128_s256_10k_20261015_171649_473135/checkpoints/latest.pt"
+}

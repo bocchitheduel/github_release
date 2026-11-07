@@ -1,0 +1,59 @@
+automatic_split_enabled = false
+batch_bytes = 8388608
+byte_order = "little"
+created_utc = "2026-10-14T00:22:57.296"
+delimiter = "<|endoftext|>"
+dtype = "int64"
+format_version = 2
+has_header = false
+itemsize = 8
+julia_version = "1.12.7"
+max_document_bytes = 67108864
+model_path = "tokenizer_julia/models/sample_model.toml"
+model_sha256 = "c82fb6c3b94fa78a278a1867b9ce4a3fb6b17dec151bf11cd8f81f0480a4cfe0"
+numpy_dtype = "<i8"
+pretoken_pattern = "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+"
+read_bytes = 1048576
+seconds_including_io_and_full_validation = 98.418289625
+split_mode = "provided_files"
+split_rule = "Explicit training and validation files preserved; automatic splitting disabled"
+threads = 8
+validation_document_fraction_actual = 0.010064724435778417
+validation_scope = "Every emitted ID checked before dtype conversion and every stored ID re-read against vocab_size"
+vocab_size = 8983
+
+[[sources]]
+bytes = 2227753162
+documents = 2717700
+path = "./TinyStoriesV2-GPT4-train.txt"
+sha256 = "6418d412de72888f52b5142c761ac21a582f7d1166f0bfbdb5f03ccfdec90443"
+[[sources]]
+bytes = 22502601
+documents = 27631
+path = "./TinyStoriesV2-GPT4-valid.txt"
+sha256 = "6874bae9a4c1a4e7edcf0e53b86c17817e9cf881fc75ff2368da457b80c0585d"
+
+[special_tokens]
+"<|endoftext|>" = 256
+
+[train]
+all_ids_in_range = true
+bytes = 4356384664
+documents = 2717700
+file = "train.bin"
+input_bytes = 2227753162
+max_id = 8982
+min_id = 9
+sha256 = "13ac379e20385078099bf02dabd71ff11f95aebced03e971892f5972a28d4cbd"
+tokens = 544548083
+
+[validation]
+all_ids_in_range = true
+bytes = 43995040
+documents = 27631
+file = "val.bin"
+input_bytes = 22502601
+max_id = 8982
+min_id = 10
+sha256 = "3001084fc95353e967e8d00f1150b19d90d923c92a033bc0409d8eac32144914"
+tokens = 5499380

@@ -1,0 +1,62 @@
+{
+  "device": "cpu",
+  "checks": [
+    {
+      "name": "context_crop_rollover_and_eos",
+      "passed": true,
+      "contexts": [
+        [
+          99,
+          100,
+          101,
+          102
+        ],
+        [
+          100,
+          101,
+          102,
+          33
+        ],
+        [
+          101,
+          102,
+          33,
+          33
+        ]
+      ],
+      "output": "abcdef!!"
+    },
+    {
+      "name": "exception_restores_model_mode",
+      "passed": true
+    },
+    {
+      "name": "seeded_repeatability_without_global_rng_consumption",
+      "passed": true
+    },
+    {
+      "name": "zero_new_tokens_skips_model",
+      "passed": true
+    },
+    {
+      "name": "invalid_inputs_rejected",
+      "passed": true,
+      "cases": 5
+    },
+    {
+      "name": "top_p_crossing_token_and_renormalization",
+      "passed": true,
+      "counts": [
+        2762,
+        1334,
+        0
+      ],
+      "expected_probabilities": [
+        0.6666666666666666,
+        0.3333333333333333,
+        0
+      ]
+    }
+  ],
+  "passed": 6
+}

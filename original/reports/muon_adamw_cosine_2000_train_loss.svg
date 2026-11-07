@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620">
+<rect width="100%" height="100%" fill="white"/>
+<text x="500" y="34" text-anchor="middle" font-family="sans-serif" font-size="21">Training loss, 100-step means</text>
+<text x="500" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#555">Both curves are 100-step interval averages</text>
+<line x1="105" y1="86.00" x2="715" y2="86.00" stroke="#ddd"/>
+<text x="93" y="90.00" text-anchor="end" font-family="sans-serif" font-size="12">8.83</text>
+<line x1="105" y1="159.67" x2="715" y2="159.67" stroke="#ddd"/>
+<text x="93" y="163.67" text-anchor="end" font-family="sans-serif" font-size="12">7.55</text>
+<line x1="105" y1="233.33" x2="715" y2="233.33" stroke="#ddd"/>
+<text x="93" y="237.33" text-anchor="end" font-family="sans-serif" font-size="12">6.27</text>
+<line x1="105" y1="307.00" x2="715" y2="307.00" stroke="#ddd"/>
+<text x="93" y="311.00" text-anchor="end" font-family="sans-serif" font-size="12">4.99</text>
+<line x1="105" y1="380.67" x2="715" y2="380.67" stroke="#ddd"/>
+<text x="93" y="384.67" text-anchor="end" font-family="sans-serif" font-size="12">3.71</text>
+<line x1="105" y1="454.33" x2="715" y2="454.33" stroke="#ddd"/>
+<text x="93" y="458.33" text-anchor="end" font-family="sans-serif" font-size="12">2.43</text>
+<line x1="105" y1="528.00" x2="715" y2="528.00" stroke="#ddd"/>
+<text x="93" y="532.00" text-anchor="end" font-family="sans-serif" font-size="12">1.15</text>
+<line x1="105.00" y1="86" x2="105.00" y2="528" stroke="#eee"/>
+<text x="105.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">0</text>
+<line x1="227.00" y1="86" x2="227.00" y2="528" stroke="#eee"/>
+<text x="227.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">400</text>
+<line x1="349.00" y1="86" x2="349.00" y2="528" stroke="#eee"/>
+<text x="349.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">800</text>
+<line x1="471.00" y1="86" x2="471.00" y2="528" stroke="#eee"/>
+<text x="471.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">1200</text>
+<line x1="593.00" y1="86" x2="593.00" y2="528" stroke="#eee"/>
+<text x="593.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">1600</text>
+<line x1="715.00" y1="86" x2="715.00" y2="528" stroke="#eee"/>
+<text x="715.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">2000</text>
+<line x1="105" y1="528" x2="715" y2="528" stroke="#444"/>
+<line x1="105" y1="86" x2="105" y2="528" stroke="#444"/>
+<text x="410.0" y="596" text-anchor="middle" font-family="sans-serif" font-size="15">Optimizer steps</text>
+<text x="24" y="307.0" transform="rotate(-90 24 307.0)" text-anchor="middle" font-family="sans-serif" font-size="15">Training cross-entropy</text>
+<path d="M135.50,116.48 L166.00,310.89 L196.50,376.80 L227.00,401.89 L257.50,425.02 L288.00,444.87 L318.50,458.23 L349.00,466.75 L379.50,472.85 L410.00,477.04 L440.50,480.57 L471.00,483.29 L501.50,485.00 L532.00,487.47 L562.50,488.75 L593.00,490.09 L623.50,491.79 L654.00,492.14 L684.50,493.87 L715.00,494.05" fill="none" stroke="#1769aa" stroke-width="2.5"/>
+<circle cx="135.50" cy="116.48" r="3" fill="#1769aa"/>
+<circle cx="166.00" cy="310.89" r="3" fill="#1769aa"/>
+<circle cx="196.50" cy="376.80" r="3" fill="#1769aa"/>
+<circle cx="227.00" cy="401.89" r="3" fill="#1769aa"/>
+<circle cx="257.50" cy="425.02" r="3" fill="#1769aa"/>
+<circle cx="288.00" cy="444.87" r="3" fill="#1769aa"/>
+<circle cx="318.50" cy="458.23" r="3" fill="#1769aa"/>
+<circle cx="349.00" cy="466.75" r="3" fill="#1769aa"/>
+<circle cx="379.50" cy="472.85" r="3" fill="#1769aa"/>
+<circle cx="410.00" cy="477.04" r="3" fill="#1769aa"/>
+<circle cx="440.50" cy="480.57" r="3" fill="#1769aa"/>
+<circle cx="471.00" cy="483.29" r="3" fill="#1769aa"/>
+<circle cx="501.50" cy="485.00" r="3" fill="#1769aa"/>
+<circle cx="532.00" cy="487.47" r="3" fill="#1769aa"/>
+<circle cx="562.50" cy="488.75" r="3" fill="#1769aa"/>
+<circle cx="593.00" cy="490.09" r="3" fill="#1769aa"/>
+<circle cx="623.50" cy="491.79" r="3" fill="#1769aa"/>
+<circle cx="654.00" cy="492.14" r="3" fill="#1769aa"/>
+<circle cx="684.50" cy="493.87" r="3" fill="#1769aa"/>
+<circle cx="715.00" cy="494.05" r="3" fill="#1769aa"/>
+<line x1="735" y1="104" x2="760" y2="104" stroke="#1769aa" stroke-width="3"/>
+<text x="768" y="108" font-family="sans-serif" font-size="12">Muon T07 (cosine; 2k run)</text>
+<path d="M135.50,196.98 L166.00,381.37 L196.50,426.30 L227.00,446.59 L257.50,459.07 L288.00,468.04 L318.50,474.86 L349.00,479.32 L379.50,482.84 L410.00,485.27 L440.50,487.70 L471.00,489.59 L501.50,490.66 L532.00,492.62 L562.50,493.53 L593.00,494.49 L623.50,495.83 L654.00,496.01 L684.50,497.47 L715.00,497.52" fill="none" stroke="#d35400" stroke-width="2.5"/>
+<circle cx="135.50" cy="196.98" r="3" fill="#d35400"/>
+<circle cx="166.00" cy="381.37" r="3" fill="#d35400"/>
+<circle cx="196.50" cy="426.30" r="3" fill="#d35400"/>
+<circle cx="227.00" cy="446.59" r="3" fill="#d35400"/>
+<circle cx="257.50" cy="459.07" r="3" fill="#d35400"/>
+<circle cx="288.00" cy="468.04" r="3" fill="#d35400"/>
+<circle cx="318.50" cy="474.86" r="3" fill="#d35400"/>
+<circle cx="349.00" cy="479.32" r="3" fill="#d35400"/>
+<circle cx="379.50" cy="482.84" r="3" fill="#d35400"/>
+<circle cx="410.00" cy="485.27" r="3" fill="#d35400"/>
+<circle cx="440.50" cy="487.70" r="3" fill="#d35400"/>
+<circle cx="471.00" cy="489.59" r="3" fill="#d35400"/>
+<circle cx="501.50" cy="490.66" r="3" fill="#d35400"/>
+<circle cx="532.00" cy="492.62" r="3" fill="#d35400"/>
+<circle cx="562.50" cy="493.53" r="3" fill="#d35400"/>
+<circle cx="593.00" cy="494.49" r="3" fill="#d35400"/>
+<circle cx="623.50" cy="495.83" r="3" fill="#d35400"/>
+<circle cx="654.00" cy="496.01" r="3" fill="#d35400"/>
+<circle cx="684.50" cy="497.47" r="3" fill="#d35400"/>
+<circle cx="715.00" cy="497.52" r="3" fill="#d35400"/>
+<line x1="735" y1="131" x2="760" y2="131" stroke="#d35400" stroke-width="3"/>
+<text x="768" y="135" font-family="sans-serif" font-size="12">AdamW baseline (first 2k of 10k run)</text>
+</svg>

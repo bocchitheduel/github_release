@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620">
+<rect width="100%" height="100%" fill="white"/>
+<text x="480" y="34" text-anchor="middle" font-family="sans-serif" font-size="21">Validation loss at recorded optimizer steps</text>
+<text x="480" y="57" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#555">First 500 steps shown; no values interpolated</text>
+<line x1="100" y1="78.00" x2="720" y2="78.00" stroke="#ddd"/>
+<text x="88" y="82.00" text-anchor="end" font-family="sans-serif" font-size="12">5.15</text>
+<line x1="100" y1="153.33" x2="720" y2="153.33" stroke="#ddd"/>
+<text x="88" y="157.33" text-anchor="end" font-family="sans-serif" font-size="12">4.64</text>
+<line x1="100" y1="228.67" x2="720" y2="228.67" stroke="#ddd"/>
+<text x="88" y="232.67" text-anchor="end" font-family="sans-serif" font-size="12">4.13</text>
+<line x1="100" y1="304.00" x2="720" y2="304.00" stroke="#ddd"/>
+<text x="88" y="308.00" text-anchor="end" font-family="sans-serif" font-size="12">3.62</text>
+<line x1="100" y1="379.33" x2="720" y2="379.33" stroke="#ddd"/>
+<text x="88" y="383.33" text-anchor="end" font-family="sans-serif" font-size="12">3.12</text>
+<line x1="100" y1="454.67" x2="720" y2="454.67" stroke="#ddd"/>
+<text x="88" y="458.67" text-anchor="end" font-family="sans-serif" font-size="12">2.61</text>
+<line x1="100" y1="530.00" x2="720" y2="530.00" stroke="#ddd"/>
+<text x="88" y="534.00" text-anchor="end" font-family="sans-serif" font-size="12">2.10</text>
+<line x1="100.00" y1="78" x2="100.00" y2="530" stroke="#eee"/>
+<text x="100.00" y="553" text-anchor="middle" font-family="sans-serif" font-size="12">0</text>
+<line x1="224.00" y1="78" x2="224.00" y2="530" stroke="#eee"/>
+<text x="224.00" y="553" text-anchor="middle" font-family="sans-serif" font-size="12">100</text>
+<line x1="348.00" y1="78" x2="348.00" y2="530" stroke="#eee"/>
+<text x="348.00" y="553" text-anchor="middle" font-family="sans-serif" font-size="12">200</text>
+<line x1="472.00" y1="78" x2="472.00" y2="530" stroke="#eee"/>
+<text x="472.00" y="553" text-anchor="middle" font-family="sans-serif" font-size="12">300</text>
+<line x1="596.00" y1="78" x2="596.00" y2="530" stroke="#eee"/>
+<text x="596.00" y="553" text-anchor="middle" font-family="sans-serif" font-size="12">400</text>
+<line x1="720.00" y1="78" x2="720.00" y2="530" stroke="#eee"/>
+<text x="720.00" y="553" text-anchor="middle" font-family="sans-serif" font-size="12">500</text>
+<line x1="100" y1="530" x2="720" y2="530" stroke="#444"/>
+<line x1="100" y1="78" x2="100" y2="530" stroke="#444"/>
+<text x="410.0" y="595" text-anchor="middle" font-family="sans-serif" font-size="15">Optimizer steps</text>
+<text x="24" y="304.0" transform="rotate(-90 24 304.0)" text-anchor="middle" font-family="sans-serif" font-size="15">Validation cross-entropy</text>
+<path d="M131.00,119.77 L162.00,234.26 L193.00,280.64 L224.00,307.14 L255.00,329.86 L286.00,349.87 L317.00,368.02 L348.00,385.04 L379.00,401.80 L410.00,417.93 L472.00,444.89 L534.00,466.41 L596.00,483.21 L656.76,496.37" fill="none" stroke="#1769aa" stroke-width="2.5"/>
+<circle cx="131.00" cy="119.77" r="3.5" fill="#1769aa"/>
+<circle cx="162.00" cy="234.26" r="3.5" fill="#1769aa"/>
+<circle cx="193.00" cy="280.64" r="3.5" fill="#1769aa"/>
+<circle cx="224.00" cy="307.14" r="3.5" fill="#1769aa"/>
+<circle cx="255.00" cy="329.86" r="3.5" fill="#1769aa"/>
+<circle cx="286.00" cy="349.87" r="3.5" fill="#1769aa"/>
+<circle cx="317.00" cy="368.02" r="3.5" fill="#1769aa"/>
+<circle cx="348.00" cy="385.04" r="3.5" fill="#1769aa"/>
+<circle cx="379.00" cy="401.80" r="3.5" fill="#1769aa"/>
+<circle cx="410.00" cy="417.93" r="3.5" fill="#1769aa"/>
+<circle cx="472.00" cy="444.89" r="3.5" fill="#1769aa"/>
+<circle cx="534.00" cy="466.41" r="3.5" fill="#1769aa"/>
+<circle cx="596.00" cy="483.21" r="3.5" fill="#1769aa"/>
+<circle cx="656.76" cy="496.37" r="3.5" fill="#1769aa"/>
+<line x1="740" y1="96" x2="764" y2="96" stroke="#1769aa" stroke-width="3"/>
+<text x="772" y="100" font-family="sans-serif" font-size="12">Muon T07 (ends at step 449)</text>
+<path d="M224.00,172.66 L348.00,368.68 L472.00,442.07 L596.00,478.96 L720.00,505.33" fill="none" stroke="#d35400" stroke-width="2.5"/>
+<circle cx="224.00" cy="172.66" r="3.5" fill="#d35400"/>
+<circle cx="348.00" cy="368.68" r="3.5" fill="#d35400"/>
+<circle cx="472.00" cy="442.07" r="3.5" fill="#d35400"/>
+<circle cx="596.00" cy="478.96" r="3.5" fill="#d35400"/>
+<circle cx="720.00" cy="505.33" r="3.5" fill="#d35400"/>
+<line x1="740" y1="120" x2="764" y2="120" stroke="#d35400" stroke-width="3"/>
+<text x="772" y="124" font-family="sans-serif" font-size="12">AdamW baseline (to step 10,000; view clipped at 500)</text>
+</svg>

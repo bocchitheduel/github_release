@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620">
+<rect width="100%" height="100%" fill="white"/>
+<text x="500" y="34" text-anchor="middle" font-family="sans-serif" font-size="21">Validation loss, fixed 20-batch evaluations</text>
+<text x="500" y="58" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#555">Both runs evaluated every 100 optimizer steps; first 5,000 steps shown</text>
+<line x1="105" y1="86.00" x2="715" y2="86.00" stroke="#ddd"/>
+<text x="93" y="90.00" text-anchor="end" font-family="sans-serif" font-size="12">4.75</text>
+<line x1="105" y1="159.67" x2="715" y2="159.67" stroke="#ddd"/>
+<text x="93" y="163.67" text-anchor="end" font-family="sans-serif" font-size="12">4.17</text>
+<line x1="105" y1="233.33" x2="715" y2="233.33" stroke="#ddd"/>
+<text x="93" y="237.33" text-anchor="end" font-family="sans-serif" font-size="12">3.58</text>
+<line x1="105" y1="307.00" x2="715" y2="307.00" stroke="#ddd"/>
+<text x="93" y="311.00" text-anchor="end" font-family="sans-serif" font-size="12">3.00</text>
+<line x1="105" y1="380.67" x2="715" y2="380.67" stroke="#ddd"/>
+<text x="93" y="384.67" text-anchor="end" font-family="sans-serif" font-size="12">2.42</text>
+<line x1="105" y1="454.33" x2="715" y2="454.33" stroke="#ddd"/>
+<text x="93" y="458.33" text-anchor="end" font-family="sans-serif" font-size="12">1.83</text>
+<line x1="105" y1="528.00" x2="715" y2="528.00" stroke="#ddd"/>
+<text x="93" y="532.00" text-anchor="end" font-family="sans-serif" font-size="12">1.25</text>
+<line x1="105.00" y1="86" x2="105.00" y2="528" stroke="#eee"/>
+<text x="105.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">0</text>
+<line x1="227.00" y1="86" x2="227.00" y2="528" stroke="#eee"/>
+<text x="227.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">1000</text>
+<line x1="349.00" y1="86" x2="349.00" y2="528" stroke="#eee"/>
+<text x="349.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">2000</text>
+<line x1="471.00" y1="86" x2="471.00" y2="528" stroke="#eee"/>
+<text x="471.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">3000</text>
+<line x1="593.00" y1="86" x2="593.00" y2="528" stroke="#eee"/>
+<text x="593.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">4000</text>
+<line x1="715.00" y1="86" x2="715.00" y2="528" stroke="#eee"/>
+<text x="715.00" y="551" text-anchor="middle" font-family="sans-serif" font-size="12">5000</text>
+<line x1="105" y1="528" x2="715" y2="528" stroke="#444"/>
+<line x1="105" y1="86" x2="105" y2="528" stroke="#444"/>
+<text x="410.0" y="596" text-anchor="middle" font-family="sans-serif" font-size="15">Optimizer steps</text>
+<text x="24" y="307.0" transform="rotate(-90 24 307.0)" text-anchor="middle" font-family="sans-serif" font-size="15">Validation cross-entropy</text>
+<path d="M117.20,230.87 L129.40,297.12 L141.60,348.03 L153.80,380.61 L166.00,401.44 L178.20,415.65 L190.40,425.79 L202.60,433.29 L214.80,439.68 L227.00,444.51 L239.20,449.03 L251.40,452.64 L263.60,455.61 L275.80,458.39 L288.00,460.89 L300.20,463.18 L312.40,465.37 L324.60,467.41 L336.80,468.90 L349.00,470.55 L361.20,471.97 L373.40,473.52 L385.60,474.66 L397.80,475.87 L410.00,476.87 L422.20,477.81 L434.40,478.81 L446.60,479.67 L458.80,480.61 L471.00,481.46 L483.20,482.20 L495.40,482.98 L507.60,483.89 L519.80,484.59 L532.00,485.17 L544.20,485.84 L556.40,486.59 L568.60,487.04 L580.80,487.54 L593.00,488.30 L605.20,488.69 L617.40,489.15 L629.60,489.69 L641.80,490.31 L654.00,490.55 L666.20,491.02 L678.40,491.54 L690.60,492.13 L702.80,492.49 L715.00,492.80" fill="none" stroke="#1769aa" stroke-width="2.5"/>
+<circle cx="117.20" cy="230.87" r="2.7" fill="#1769aa"/>
+<circle cx="129.40" cy="297.12" r="2.7" fill="#1769aa"/>
+<circle cx="141.60" cy="348.03" r="2.7" fill="#1769aa"/>
+<circle cx="153.80" cy="380.61" r="2.7" fill="#1769aa"/>
+<circle cx="166.00" cy="401.44" r="2.7" fill="#1769aa"/>
+<circle cx="178.20" cy="415.65" r="2.7" fill="#1769aa"/>
+<circle cx="190.40" cy="425.79" r="2.7" fill="#1769aa"/>
+<circle cx="202.60" cy="433.29" r="2.7" fill="#1769aa"/>
+<circle cx="214.80" cy="439.68" r="2.7" fill="#1769aa"/>
+<circle cx="227.00" cy="444.51" r="2.7" fill="#1769aa"/>
+<circle cx="239.20" cy="449.03" r="2.7" fill="#1769aa"/>
+<circle cx="251.40" cy="452.64" r="2.7" fill="#1769aa"/>
+<circle cx="263.60" cy="455.61" r="2.7" fill="#1769aa"/>
+<circle cx="275.80" cy="458.39" r="2.7" fill="#1769aa"/>
+<circle cx="288.00" cy="460.89" r="2.7" fill="#1769aa"/>
+<circle cx="300.20" cy="463.18" r="2.7" fill="#1769aa"/>
+<circle cx="312.40" cy="465.37" r="2.7" fill="#1769aa"/>
+<circle cx="324.60" cy="467.41" r="2.7" fill="#1769aa"/>
+<circle cx="336.80" cy="468.90" r="2.7" fill="#1769aa"/>
+<circle cx="349.00" cy="470.55" r="2.7" fill="#1769aa"/>
+<circle cx="361.20" cy="471.97" r="2.7" fill="#1769aa"/>
+<circle cx="373.40" cy="473.52" r="2.7" fill="#1769aa"/>
+<circle cx="385.60" cy="474.66" r="2.7" fill="#1769aa"/>
+<circle cx="397.80" cy="475.87" r="2.7" fill="#1769aa"/>
+<circle cx="410.00" cy="476.87" r="2.7" fill="#1769aa"/>
+<circle cx="422.20" cy="477.81" r="2.7" fill="#1769aa"/>
+<circle cx="434.40" cy="478.81" r="2.7" fill="#1769aa"/>
+<circle cx="446.60" cy="479.67" r="2.7" fill="#1769aa"/>
+<circle cx="458.80" cy="480.61" r="2.7" fill="#1769aa"/>
+<circle cx="471.00" cy="481.46" r="2.7" fill="#1769aa"/>
+<circle cx="483.20" cy="482.20" r="2.7" fill="#1769aa"/>
+<circle cx="495.40" cy="482.98" r="2.7" fill="#1769aa"/>
+<circle cx="507.60" cy="483.89" r="2.7" fill="#1769aa"/>
+<circle cx="519.80" cy="484.59" r="2.7" fill="#1769aa"/>
+<circle cx="532.00" cy="485.17" r="2.7" fill="#1769aa"/>
+<circle cx="544.20" cy="485.84" r="2.7" fill="#1769aa"/>
+<circle cx="556.40" cy="486.59" r="2.7" fill="#1769aa"/>
+<circle cx="568.60" cy="487.04" r="2.7" fill="#1769aa"/>
+<circle cx="580.80" cy="487.54" r="2.7" fill="#1769aa"/>
+<circle cx="593.00" cy="488.30" r="2.7" fill="#1769aa"/>
+<circle cx="605.20" cy="488.69" r="2.7" fill="#1769aa"/>
+<circle cx="617.40" cy="489.15" r="2.7" fill="#1769aa"/>
+<circle cx="629.60" cy="489.69" r="2.7" fill="#1769aa"/>
+<circle cx="641.80" cy="490.31" r="2.7" fill="#1769aa"/>
+<circle cx="654.00" cy="490.55" r="2.7" fill="#1769aa"/>
+<circle cx="666.20" cy="491.02" r="2.7" fill="#1769aa"/>
+<circle cx="678.40" cy="491.54" r="2.7" fill="#1769aa"/>
+<circle cx="690.60" cy="492.13" r="2.7" fill="#1769aa"/>
+<circle cx="702.80" cy="492.49" r="2.7" fill="#1769aa"/>
+<circle cx="715.00" cy="492.80" r="2.7" fill="#1769aa"/>
+<line x1="735" y1="104" x2="760" y2="104" stroke="#1769aa" stroke-width="3"/>
+<text x="768" y="108" font-family="sans-serif" font-size="12">Muon T07 @ 5k</text>
+<path d="M117.20,116.48 L129.40,283.20 L141.60,345.62 L153.80,377.00 L166.00,399.42 L178.20,416.82 L190.40,428.88 L202.60,436.94 L214.80,443.00 L227.00,448.45 L239.20,453.12 L251.40,456.69 L263.60,459.88 L275.80,462.21 L288.00,464.90 L300.20,466.73 L312.40,468.94 L324.60,470.84 L336.80,471.98 L349.00,474.02 L361.20,475.20 L373.40,476.82 L385.60,477.75 L397.80,479.25 L410.00,480.24 L422.20,481.48 L434.40,482.14 L446.60,483.14 L458.80,483.69 L471.00,484.93 L483.20,485.55 L495.40,486.50 L507.60,487.54 L519.80,488.22 L532.00,488.68 L544.20,489.66 L556.40,490.43 L568.60,490.89 L580.80,491.71 L593.00,492.13 L605.20,492.84 L617.40,493.41 L629.60,493.72 L641.80,494.67 L654.00,494.99 L666.20,495.42 L678.40,496.09 L690.60,496.80 L702.80,497.11 L715.00,497.52" fill="none" stroke="#d35400" stroke-width="2.5"/>
+<circle cx="117.20" cy="116.48" r="2.7" fill="#d35400"/>
+<circle cx="129.40" cy="283.20" r="2.7" fill="#d35400"/>
+<circle cx="141.60" cy="345.62" r="2.7" fill="#d35400"/>
+<circle cx="153.80" cy="377.00" r="2.7" fill="#d35400"/>
+<circle cx="166.00" cy="399.42" r="2.7" fill="#d35400"/>
+<circle cx="178.20" cy="416.82" r="2.7" fill="#d35400"/>
+<circle cx="190.40" cy="428.88" r="2.7" fill="#d35400"/>
+<circle cx="202.60" cy="436.94" r="2.7" fill="#d35400"/>
+<circle cx="214.80" cy="443.00" r="2.7" fill="#d35400"/>
+<circle cx="227.00" cy="448.45" r="2.7" fill="#d35400"/>
+<circle cx="239.20" cy="453.12" r="2.7" fill="#d35400"/>
+<circle cx="251.40" cy="456.69" r="2.7" fill="#d35400"/>
+<circle cx="263.60" cy="459.88" r="2.7" fill="#d35400"/>
+<circle cx="275.80" cy="462.21" r="2.7" fill="#d35400"/>
+<circle cx="288.00" cy="464.90" r="2.7" fill="#d35400"/>
+<circle cx="300.20" cy="466.73" r="2.7" fill="#d35400"/>
+<circle cx="312.40" cy="468.94" r="2.7" fill="#d35400"/>
+<circle cx="324.60" cy="470.84" r="2.7" fill="#d35400"/>
+<circle cx="336.80" cy="471.98" r="2.7" fill="#d35400"/>
+<circle cx="349.00" cy="474.02" r="2.7" fill="#d35400"/>
+<circle cx="361.20" cy="475.20" r="2.7" fill="#d35400"/>
+<circle cx="373.40" cy="476.82" r="2.7" fill="#d35400"/>
+<circle cx="385.60" cy="477.75" r="2.7" fill="#d35400"/>
+<circle cx="397.80" cy="479.25" r="2.7" fill="#d35400"/>
+<circle cx="410.00" cy="480.24" r="2.7" fill="#d35400"/>
+<circle cx="422.20" cy="481.48" r="2.7" fill="#d35400"/>
+<circle cx="434.40" cy="482.14" r="2.7" fill="#d35400"/>
+<circle cx="446.60" cy="483.14" r="2.7" fill="#d35400"/>
+<circle cx="458.80" cy="483.69" r="2.7" fill="#d35400"/>
+<circle cx="471.00" cy="484.93" r="2.7" fill="#d35400"/>
+<circle cx="483.20" cy="485.55" r="2.7" fill="#d35400"/>
+<circle cx="495.40" cy="486.50" r="2.7" fill="#d35400"/>
+<circle cx="507.60" cy="487.54" r="2.7" fill="#d35400"/>
+<circle cx="519.80" cy="488.22" r="2.7" fill="#d35400"/>
+<circle cx="532.00" cy="488.68" r="2.7" fill="#d35400"/>
+<circle cx="544.20" cy="489.66" r="2.7" fill="#d35400"/>
+<circle cx="556.40" cy="490.43" r="2.7" fill="#d35400"/>
+<circle cx="568.60" cy="490.89" r="2.7" fill="#d35400"/>
+<circle cx="580.80" cy="491.71" r="2.7" fill="#d35400"/>
+<circle cx="593.00" cy="492.13" r="2.7" fill="#d35400"/>
+<circle cx="605.20" cy="492.84" r="2.7" fill="#d35400"/>
+<circle cx="617.40" cy="493.41" r="2.7" fill="#d35400"/>
+<circle cx="629.60" cy="493.72" r="2.7" fill="#d35400"/>
+<circle cx="641.80" cy="494.67" r="2.7" fill="#d35400"/>
+<circle cx="654.00" cy="494.99" r="2.7" fill="#d35400"/>
+<circle cx="666.20" cy="495.42" r="2.7" fill="#d35400"/>
+<circle cx="678.40" cy="496.09" r="2.7" fill="#d35400"/>
+<circle cx="690.60" cy="496.80" r="2.7" fill="#d35400"/>
+<circle cx="702.80" cy="497.11" r="2.7" fill="#d35400"/>
+<circle cx="715.00" cy="497.52" r="2.7" fill="#d35400"/>
+<line x1="735" y1="131" x2="760" y2="131" stroke="#d35400" stroke-width="3"/>
+<text x="768" y="135" font-family="sans-serif" font-size="12">AdamW baseline (first 5k of 10k run)</text>
+</svg>

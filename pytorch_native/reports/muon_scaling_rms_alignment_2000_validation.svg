@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="500" viewBox="0 0 880 500">
+<rect width="100%" height="100%" fill="white"/>
+<text x="440.0" y="30" text-anchor="middle" font-family="sans-serif" font-size="20">Validation loss (matched 2,000-step runs)</text>
+<line x1="86" y1="410.00" x2="835" y2="410.00" stroke="#dddddd"/>
+<text x="76" y="414.00" text-anchor="end" font-family="sans-serif" font-size="12" fill="#444">1.25</text>
+<line x1="86" y1="339.60" x2="835" y2="339.60" stroke="#dddddd"/>
+<text x="76" y="343.60" text-anchor="end" font-family="sans-serif" font-size="12" fill="#444">2.38</text>
+<line x1="86" y1="269.20" x2="835" y2="269.20" stroke="#dddddd"/>
+<text x="76" y="273.20" text-anchor="end" font-family="sans-serif" font-size="12" fill="#444">3.51</text>
+<line x1="86" y1="198.80" x2="835" y2="198.80" stroke="#dddddd"/>
+<text x="76" y="202.80" text-anchor="end" font-family="sans-serif" font-size="12" fill="#444">4.64</text>
+<line x1="86" y1="128.40" x2="835" y2="128.40" stroke="#dddddd"/>
+<text x="76" y="132.40" text-anchor="end" font-family="sans-serif" font-size="12" fill="#444">5.78</text>
+<line x1="86" y1="58.00" x2="835" y2="58.00" stroke="#dddddd"/>
+<text x="76" y="62.00" text-anchor="end" font-family="sans-serif" font-size="12" fill="#444">6.91</text>
+<line x1="46.58" y1="58" x2="46.58" y2="410" stroke="#eeeeee"/>
+<text x="46.58" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">0</text>
+<line x1="145.13" y1="58" x2="145.13" y2="410" stroke="#eeeeee"/>
+<text x="145.13" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">250</text>
+<line x1="243.68" y1="58" x2="243.68" y2="410" stroke="#eeeeee"/>
+<text x="243.68" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">500</text>
+<line x1="342.24" y1="58" x2="342.24" y2="410" stroke="#eeeeee"/>
+<text x="342.24" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">750</text>
+<line x1="440.79" y1="58" x2="440.79" y2="410" stroke="#eeeeee"/>
+<text x="440.79" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">1000</text>
+<line x1="539.34" y1="58" x2="539.34" y2="410" stroke="#eeeeee"/>
+<text x="539.34" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">1250</text>
+<line x1="637.89" y1="58" x2="637.89" y2="410" stroke="#eeeeee"/>
+<text x="637.89" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">1500</text>
+<line x1="736.45" y1="58" x2="736.45" y2="410" stroke="#eeeeee"/>
+<text x="736.45" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">1750</text>
+<line x1="835.00" y1="58" x2="835.00" y2="410" stroke="#eeeeee"/>
+<text x="835.00" y="432" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#444">2000</text>
+<line x1="86" y1="410" x2="835" y2="410" stroke="#333"/>
+<line x1="86" y1="58" x2="86" y2="410" stroke="#333"/>
+<text x="460.5" y="458" text-anchor="middle" font-family="sans-serif" font-size="14">Training step</text>
+<text x="20" y="234.0" transform="rotate(-90 20 234.0)" text-anchor="middle" font-family="sans-serif" font-size="14">Cross-entropy loss</text>
+<polyline points="86.00,170.25 125.42,269.06 164.84,317.12 204.26,342.26 243.68,355.25 283.11,363.53 322.53,368.75 361.95,372.47 401.37,375.23 440.79,377.43 480.21,379.43 519.63,381.02 559.05,382.29 598.47,383.27 637.89,384.41 677.32,385.32 716.74,386.19 756.16,387.04 795.58,387.60 835.00,388.39" fill="none" stroke="#c23b22" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="86.00,79.61 125.42,234.34 164.84,267.37 204.26,292.29 243.68,316.84 283.11,334.50 322.53,345.69 361.95,353.25 401.37,358.64 440.79,362.61 480.21,365.84 519.63,368.41 559.05,370.51 598.47,372.33 637.89,373.95 677.32,375.39 716.74,376.69 756.16,377.96 795.58,378.86 835.00,379.83" fill="none" stroke="#277da1" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="86.00,207.05 125.42,289.30 164.84,320.09 204.26,335.57 243.68,346.64 283.11,355.22 322.53,361.17 361.95,365.15 401.37,368.13 440.79,370.82 480.21,373.13 519.63,374.89 559.05,376.46 598.47,377.61 637.89,378.94 677.32,379.84 716.74,380.93 756.16,381.87 795.58,382.43 835.00,383.44" fill="none" stroke="#555555" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="180" y1="481" x2="208" y2="481" stroke="#c23b22" stroke-width="3"/>
+<text x="216" y="485" font-family="sans-serif" font-size="13">RMS 对齐 Muon</text>
+<line x1="400" y1="481" x2="428" y2="481" stroke="#277da1" stroke-width="3"/>
+<text x="436" y="485" font-family="sans-serif" font-size="13">原 scaling Muon</text>
+<line x1="620" y1="481" x2="648" y2="481" stroke="#555555" stroke-width="3"/>
+<text x="656" y="485" font-family="sans-serif" font-size="13">AdamW</text>
+</svg>

@@ -1,0 +1,74 @@
+{
+  "current": {
+    "event": "train_step_with_loader",
+    "data_pages_prewarmed": true,
+    "ms": 236.3704595000172,
+    "samples_ms": [
+      245.1410770999928,
+      241.59985060000508,
+      236.3704595000172,
+      235.1303322999911,
+      234.20658529998946
+    ],
+    "tokens_per_second": 138629.8443101246,
+    "peak_allocated_mib": 6725.498046875,
+    "speedup": 1.0,
+    "step_time_reduction": 0.0,
+    "memory_reduction": 0.0,
+    "train_only_minutes_for_10000_steps": 39.3950765833362
+  },
+  "sdpa": {
+    "event": "train_step_with_loader",
+    "data_pages_prewarmed": true,
+    "ms": 171.63678240001445,
+    "samples_ms": [
+      177.11072770000555,
+      175.4710095999826,
+      170.57465539999157,
+      171.63678240001445,
+      168.18767110000863
+    ],
+    "tokens_per_second": 190914.7884375467,
+    "peak_allocated_mib": 5005.876953125,
+    "speedup": 1.3771550374857022,
+    "step_time_reduction": 0.27386534356674985,
+    "memory_reduction": 0.255686802934843,
+    "train_only_minutes_for_10000_steps": 28.60613040000241
+  },
+  "sdpa_fused": {
+    "event": "train_step_with_loader",
+    "data_pages_prewarmed": true,
+    "ms": 157.93065810000826,
+    "samples_ms": [
+      158.45866940001088,
+      157.93065810000826,
+      157.45532959999764,
+      158.53622660001747,
+      157.71481540000423
+    ],
+    "tokens_per_second": 207483.46390888805,
+    "peak_allocated_mib": 5005.89599609375,
+    "speedup": 1.4966724152465547,
+    "step_time_reduction": 0.3318511186462505,
+    "memory_reduction": 0.2556839714763225,
+    "train_only_minutes_for_10000_steps": 26.321776350001375
+  },
+  "sdpa_fused_ce": {
+    "event": "train_step_with_loader",
+    "data_pages_prewarmed": true,
+    "ms": 153.70609379999678,
+    "samples_ms": [
+      155.38187639999705,
+      154.8146061999887,
+      153.5219103000145,
+      153.38378680000915,
+      153.70609379999678
+    ],
+    "tokens_per_second": 213186.0825416454,
+    "peak_allocated_mib": 3881.896484375,
+    "speedup": 1.5378079922295322,
+    "step_time_reduction": 0.3497237593685619,
+    "memory_reduction": 0.42280906821782194,
+    "train_only_minutes_for_10000_steps": 25.617682299999462
+  }
+}

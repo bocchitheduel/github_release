@@ -1,0 +1,15 @@
+# Local data, model artifacts, and runtime caches
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+*.log
+__pycache__/
+.venv/
+venv/
+.cache/
+.cache_*/
+.cache*/
+**/cache/
+.DS_Store
