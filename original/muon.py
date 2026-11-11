@@ -20,6 +20,8 @@ from linear_module import Linear
 
 DEFAULT_NS_COEFFICIENTS = (3.4445, -4.7750, 2.0315)
 SCALING_MODES = ("rms_to_rms", "original", "rms_alignment", "match_rms_adamw")
+NS_PRECISIONS = ("tf32x3", "tf32", "bf16", "fp16")
+UPDATE_STRATEGIES = ("fused", "foreach")
 
 
 def compute_muon_scale(fan_out: int, fan_in: int, *,
@@ -111,12 +113,16 @@ class Muon(Optimizer):
                  nesterov: bool = False, weight_decay: float = 0.01,
                  ns_steps: int = 5,
                  ns_coefficients: tuple[float, float, float] = DEFAULT_NS_COEFFICIENTS,
-                 eps: float = 1e-7, scaling_mode: str = "rms_to_rms"):
+                 eps: float = 1e-7, scaling_mode: str = "rms_to_rms",
+                 ns_precision: str = "tf32x3", update_strategy: str = "fused"):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov,
                         weight_decay=weight_decay, ns_steps=ns_steps,
                         ns_coefficients=tuple(ns_coefficients), eps=eps,
-                        scaling_mode=scaling_mode)
+                        scaling_mode=scaling_mode, ns_precision=ns_precision,
+                        update_strategy=update_strategy)
         self._validate_group(defaults)
+        self._packed_momentum = {}
+        self._cuda_workspace = {}
         super().__init__(params, defaults)
 
     @staticmethod
@@ -136,6 +142,10 @@ class Muon(Optimizer):
             raise ValueError("ns_coefficients must contain three finite values")
         if group["scaling_mode"] not in SCALING_MODES:
             raise ValueError(f"scaling_mode must be one of {SCALING_MODES}")
+        if group["ns_precision"] not in NS_PRECISIONS:
+            raise ValueError(f"ns_precision must be one of {NS_PRECISIONS}")
+        if group["update_strategy"] not in UPDATE_STRATEGIES:
+            raise ValueError(f"update_strategy must be one of {UPDATE_STRATEGIES}")
         if not isinstance(group["nesterov"], bool):
             raise ValueError("nesterov must be a bool")
         for parameter in group.get("params", ()):
@@ -145,6 +155,9 @@ class Muon(Optimizer):
     def add_param_group(self, param_group):
         self._validate_group({**getattr(self, "defaults", {}), **param_group})
         super().add_param_group(param_group)
+        if hasattr(self, "_packed_momentum"):
+            self._packed_momentum.clear()
+            self._cuda_workspace.clear()
 
     def load_state_dict(self, state_dict):
         """Restore momentum in fp32 for low-precision model parameters."""
@@ -176,6 +189,269 @@ class Muon(Optimizer):
         finally:
             pre_hook.remove()
             post_hook.remove()
+        self._packed_momentum.clear()
+        self._cuda_workspace.clear()
+        self._rebuild_packed_momentum()
+
+    def _cuda_groups(self):
+        """Group matrices by their Newton--Schulz orientation and state dtype."""
+        groups = {}
+        for group_index, group in enumerate(self.param_groups):
+            for parameter_index, parameter in enumerate(group["params"]):
+                transposed = parameter.shape[0] > parameter.shape[1]
+                oriented_shape = (tuple(reversed(parameter.shape)) if transposed
+                                  else tuple(parameter.shape))
+                state_dtype = (torch.float64 if parameter.dtype == torch.float64
+                               else torch.float32)
+                key = (group_index, oriented_shape, parameter.device, state_dtype)
+                groups.setdefault(key, {"group": group, "records": []})["records"].append(
+                    (parameter_index, parameter, transposed))
+        for entry in groups.values():
+            # Tall and wide storage layouts share one oriented batch. Keeping
+            # each original shape contiguous also makes the final update cheap.
+            entry["records"].sort(key=lambda record: (not record[2], record[0]))
+        return groups
+
+    def _packed_buffer_view(self, packed, slot, transposed):
+        value = packed[slot]
+        return value.transpose(0, 1) if transposed else value
+
+    def _rebuild_packed_momentum(self):
+        """Pack restored per-parameter buffers while preserving checkpoint state."""
+        for key, entry in self._cuda_groups().items():
+            if (entry["records"][0][1].device.type != "cuda"
+                    or any(parameter.dtype != torch.float32
+                           for _, parameter, _ in entry["records"])):
+                continue
+            records = entry["records"]
+            buffers = [self.state[parameter].get("momentum_buffer")
+                       for _, parameter, _ in records]
+            if not any(buffer is not None for buffer in buffers):
+                continue
+            rows, cols = key[1]
+            packed = torch.zeros((len(records), rows, cols),
+                                 device=records[0][1].device, dtype=key[3])
+            for slot, ((_, parameter, transposed), buffer) in enumerate(zip(records, buffers)):
+                if buffer is not None:
+                    oriented = buffer.transpose(0, 1) if transposed else buffer
+                    packed[slot].copy_(oriented.to(device=packed.device, dtype=packed.dtype))
+                    self.state[parameter]["momentum_buffer"] = self._packed_buffer_view(
+                        packed, slot, transposed)
+            self._packed_momentum[key] = packed
+
+    def _ensure_packed_momentum(self, key, records):
+        packed = self._packed_momentum.get(key)
+        if packed is None or packed.shape[0] != len(records):
+            rows, cols = key[1]
+            packed = torch.zeros((len(records), rows, cols),
+                                 device=records[0][1].device, dtype=key[3])
+            for slot, (_, parameter, transposed) in enumerate(records):
+                buffer = self.state[parameter].get("momentum_buffer")
+                if buffer is not None:
+                    oriented = buffer.transpose(0, 1) if transposed else buffer
+                    packed[slot].copy_(oriented.to(device=packed.device, dtype=packed.dtype))
+            self._packed_momentum[key] = packed
+
+        for slot, (_, parameter, transposed) in enumerate(records):
+            state = self.state[parameter]
+            old_buffer = state.get("momentum_buffer")
+            view = self._packed_buffer_view(packed, slot, transposed)
+            if old_buffer is not None and old_buffer.untyped_storage().data_ptr() != \
+                    packed.untyped_storage().data_ptr():
+                oriented = old_buffer.transpose(0, 1) if transposed else old_buffer
+                packed[slot].copy_(oriented.to(device=packed.device, dtype=packed.dtype))
+            if old_buffer is not None:
+                state["momentum_buffer"] = view
+        return packed
+
+    def _workspace_for(self, key, active_records, gradient_dtype):
+        rows, cols = key[1]
+        slots = tuple(slot for slot, _, _, _ in active_records)
+        workspace_key = (key, slots, gradient_dtype)
+        workspace = self._cuda_workspace.get(workspace_key)
+        batch = len(active_records)
+        elements = rows * cols
+        block_size = 1024
+        blocks = (elements + block_size - 1) // block_size
+        if workspace is None:
+            device = active_records[0][2].device
+            workspace = {
+                "gradient": torch.empty((batch, rows, cols), device=device,
+                                        dtype=gradient_dtype),
+                "direction_next": torch.empty((batch, rows, cols), device=device,
+                                              dtype=torch.float32),
+                "gram": torch.empty((batch, rows, rows), device=device,
+                                    dtype=torch.float32),
+                "polynomial": torch.empty((batch, rows, rows), device=device,
+                                          dtype=torch.float32),
+                "partial_max": torch.empty((batch, blocks), device=device,
+                                            dtype=torch.float32),
+                "partial_sum": torch.empty((batch, blocks), device=device,
+                                            dtype=torch.float32),
+                "inverse_scale": torch.empty((batch,), device=device,
+                                             dtype=torch.float32),
+                "finite": torch.empty(((batch * elements + 4095) // 4096,),
+                                      device=device, dtype=torch.int32),
+                "parameter_batches": {},
+            }
+            # The fused momentum kernel reads each gradient tile before writing
+            # its direction back to the same scratch tensor.
+            workspace["direction"] = workspace["gradient"]
+            self._cuda_workspace[workspace_key] = workspace
+        return workspace
+
+    def _step_batched_cuda(self, active):
+        from muon_kernels import (check_finite, fused_parameter_update,
+                                  momentum_and_partial_norm, normalize_direction,
+                                  polynomial_gemm_epilogue,
+                                  x_update_gemm_epilogue)
+
+        active_by_id = {id(parameter): gradient for _, parameter, gradient in active}
+        batches = []
+        finite_parts = []
+        for key, entry in self._cuda_groups().items():
+            records = entry["records"]
+            active_records = [(slot, parameter, gradient, transposed)
+                              for slot, (_, parameter, transposed) in enumerate(records)
+                              if (gradient := active_by_id.get(id(parameter))) is not None]
+            if not active_records:
+                continue
+            gradient_dtypes = {gradient.dtype for _, _, gradient, _ in active_records}
+            if len(gradient_dtypes) != 1:
+                raise TypeError("Muon CUDA batches require one gradient dtype per matrix group")
+            gradient_dtype = next(iter(gradient_dtypes))
+            workspace = self._workspace_for(key, active_records, gradient_dtype)
+            oriented_gradients = [gradient.transpose(0, 1) if transposed else gradient
+                                  for _, _, gradient, transposed in active_records]
+            torch.stack(oriented_gradients, dim=0, out=workspace["gradient"])
+            check_finite(workspace["gradient"], workspace["finite"])
+            finite_parts.append(workspace["finite"])
+            batches.append((key, entry, active_records, workspace))
+
+        finite_flags = torch.cat(finite_parts)
+        if not bool(finite_flags.all()):
+            raise ValueError("Muon gradient contains non-finite values")
+
+        for key, entry, active_records, workspace in batches:
+            group = entry["group"]
+            records = entry["records"]
+            packed = self._ensure_packed_momentum(key, records)
+            all_slots = tuple(slot for slot, _, _, _ in active_records)
+            if all_slots == tuple(range(len(records))):
+                momentum_batch = packed
+            else:
+                for slot, parameter, _, transposed in active_records:
+                    state = self.state[parameter]
+                    state.setdefault("step", 0)
+                    state["momentum_buffer"] = self._packed_buffer_view(
+                        packed, slot, transposed)
+                active_buffers = [packed[slot] for slot, _, _, _ in active_records]
+                momentum_batch = workspace.get("momentum")
+                if momentum_batch is None:
+                    rows, cols = key[1]
+                    momentum_batch = torch.empty(
+                        (len(active_records), rows, cols), device=packed.device,
+                        dtype=packed.dtype)
+                    workspace["momentum"] = momentum_batch
+                torch.stack(active_buffers, dim=0, out=momentum_batch)
+
+            for _, parameter, _, _ in active_records:
+                state = self.state[parameter]
+                state.setdefault("step", 0)
+            for slot, parameter, _, transposed in active_records:
+                self.state[parameter]["momentum_buffer"] = self._packed_buffer_view(
+                    packed, slot, transposed)
+
+            momentum_and_partial_norm(
+                workspace["gradient"], momentum_batch, workspace["direction"],
+                workspace["partial_max"], workspace["partial_sum"],
+                momentum_coefficient=group["momentum"],
+                nesterov=group["nesterov"])
+            if momentum_batch is not packed:
+                active_buffers = [packed[slot] for slot, _, _, _ in active_records]
+                torch._foreach_copy_(active_buffers, list(momentum_batch.unbind(0)))
+
+            normalize_direction(
+                workspace["direction"], workspace["partial_max"],
+                workspace["partial_sum"], workspace["inverse_scale"],
+                eps=group["eps"])
+
+            direction = workspace["direction"]
+            direction_next = workspace["direction_next"]
+            a, b, c = group["ns_coefficients"]
+            gram, polynomial = workspace["gram"], workspace["polynomial"]
+            for _ in range(group["ns_steps"]):
+                torch.bmm(direction, direction.transpose(1, 2), out=gram)
+                polynomial_gemm_epilogue(
+                    gram, polynomial, beta=b, alpha=c,
+                    precision=group["ns_precision"])
+                x_update_gemm_epilogue(
+                    polynomial, direction, direction_next, beta=a,
+                    precision=group["ns_precision"])
+                direction, direction_next = direction_next, direction
+
+            direction_positions = {}
+            for batch_position, (slot, parameter, _, transposed) in enumerate(active_records):
+                direction_positions.setdefault(tuple(parameter.shape), []).append(
+                    (batch_position, parameter, transposed))
+
+            for parameter_shape, positioned_parameters in direction_positions.items():
+                rows, cols = parameter_shape
+                positions = [position for position, _, _ in positioned_parameters]
+                start, stop = positions[0], positions[-1] + 1
+                if len(positions) == stop - start:
+                    direction_batch = direction[start:stop]
+                else:
+                    index = torch.tensor(positions, device=direction.device,
+                                         dtype=torch.long)
+                    direction_batch = direction.index_select(0, index)
+
+                parameters = [parameter for _, parameter, _ in positioned_parameters]
+                scale = compute_muon_scale(
+                    rows, cols, mode=group["scaling_mode"])
+                update_scale = -group["lr"] * scale
+                decay_scale = 1.0 - group["lr"] * group["weight_decay"]
+                if group["update_strategy"] == "foreach":
+                    oriented_updates = [
+                        direction_batch[index].transpose(0, 1)
+                        if transposed else direction_batch[index]
+                        for index, (_, _, transposed) in enumerate(positioned_parameters)
+                    ]
+                    if decay_scale != 1.0:
+                        torch._foreach_mul_(parameters, decay_scale)
+                    torch._foreach_add_(parameters, oriented_updates, alpha=update_scale)
+                else:
+                    batch_key = (parameter_shape, len(parameters))
+                    parameter_batch = workspace["parameter_batches"].get(batch_key)
+                    if parameter_batch is None:
+                        parameter_batch = torch.empty(
+                            (len(parameters), rows, cols), device=parameters[0].device,
+                            dtype=parameters[0].dtype)
+                        workspace["parameter_batches"][batch_key] = parameter_batch
+                    torch.stack(parameters, dim=0, out=parameter_batch)
+                    fused_parameter_update(
+                        parameter_batch, direction_batch, rows=rows, cols=cols,
+                        transposed=positioned_parameters[0][2],
+                        update_scale=update_scale, decay_scale=decay_scale)
+                    torch._foreach_copy_(parameters, list(parameter_batch.unbind(0)))
+                for _, parameter, _ in positioned_parameters:
+                    self.state[parameter]["step"] += 1
+
+    @staticmethod
+    def _can_use_batched_cuda(active):
+        if not active:
+            return False
+        if len({parameter.device for _, parameter, _ in active}) != 1:
+            return False
+        if any(parameter.device.type != "cuda" or parameter.dtype != torch.float32
+               or gradient.device.type != "cuda" or gradient.dtype != torch.float32
+               for _, parameter, gradient in active):
+            return False
+        try:
+            import triton  # noqa: F401
+        except ImportError:
+            return False
+        return True
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -196,6 +472,9 @@ class Muon(Optimizer):
                     raise ValueError("Muon gradient shape must match its matrix parameter")
                 active.append((group, parameter, gradient))
                 gradients_by_device.setdefault(gradient.device, []).append(gradient)
+        if self._can_use_batched_cuda(active):
+            self._step_batched_cuda(active)
+            return loss
         # One synchronization per device, rather than one per matrix. The
         # training loop also rejects non-finite global gradients before step.
         for gradients in gradients_by_device.values():
@@ -359,7 +638,9 @@ def create_optimizers(model: nn.Module, config) -> Optimizer | OptimizerBundle:
             weight_decay=(weight_decay if muon_weight_decay is None else muon_weight_decay),
             ns_steps=get("muon_ns_steps", 5),
             ns_coefficients=get("muon_ns_coefficients", DEFAULT_NS_COEFFICIENTS),
-            eps=get("muon_eps", 1e-7), scaling_mode=scaling_mode))
+            eps=get("muon_eps", 1e-7), scaling_mode=scaling_mode,
+            ns_precision=get("muon_ns_precision", "tf32x3"),
+            update_strategy=get("muon_update_strategy", "fused")))
     if adamw_params:
         adamw_lr = get("adamw_lr", None)
         adamw_weight_decay = get("adamw_weight_decay", None)

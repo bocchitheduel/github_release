@@ -1,10 +1,10 @@
 # Original educational implementation
 
-This snapshot retains the project’s custom attention, cross-entropy, gradient clipping, and AdamW code. The model’s library SDPA option is available for inference, while the educational block implementation remains the training model default.
+This snapshot keeps the project's custom tiled attention, AdamW, gradient clipping, and cross-entropy. It also includes an optional Muon + AdamW optimizer. On CUDA FP32, Muon groups matrices by shape and uses batched Newton–Schulz kernels; `block_attention_triton.py` is supplied for direct attention-kernel experiments and is not the model's default path.
 
 ## Requirements
 
-Python 3.11 or newer; PyTorch 2.4 or newer; NumPy; `regex`. PyYAML is needed only for YAML-based training configurations. Gradio is needed only for `web_ui.py`. Install the core dependencies with:
+Python 3.11 or newer; PyTorch 2.4 or newer; NumPy; and `regex`. PyYAML is needed for YAML training configurations, Gradio for `web_ui.py`, and a Triton build compatible with the installed PyTorch/CUDA stack for the CUDA Muon fast path and standalone Triton attention experiments. Install the core dependencies with:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -14,7 +14,7 @@ Install optional UI/config dependencies with `python -m pip install gradio PyYAM
 
 ## Train
 
-Provide raw binary token files matching the report's `int64` format, then run:
+Provide raw binary token-ID files in little-endian `int64` format, then run:
 
 ```bash
 python train_loop.py \
@@ -24,10 +24,10 @@ python train_loop.py \
   --device auto
 ```
 
-The defaults use the report's generic training configuration. `train_10k.py` describes the fixed 128 × 256, 10,000-step experiment and expects the corresponding data files locally. No dataset or checkpoint is bundled.
+`train_10k.py` describes the fixed batch 128 × sequence 256, 10,000-step experiment. No dataset or model checkpoint is bundled.
 
 ## Architecture and results
 
-The model is a 4-layer decoder-only Transformer with 16 attention heads, RoPE, RMSNorm, SwiGLU, and separate embedding/LM-head weights. See [`TECHNICAL_REPORT.md`](TECHNICAL_REPORT.md) and the included `assessments/` artifacts for architecture, training history, and benchmark methodology.
+The model has 4 decoder layers, 16 attention heads, width 512, SwiGLU width 1,344, RoPE, RMSNorm, and separate embedding/LM-head weights. See [`TECHNICAL_REPORT.md`](TECHNICAL_REPORT.md) and `reports/` for the architecture, the AdamW/Muon training comparison, and kernel assessments.
 
-The report's external-operator short benchmark measured 1.54× throughput and 42% lower peak tensor memory on an RTX 3070 Ti, PyTorch 2.14.0+cu126, batch 128 × sequence 256. It did not include a new 10,000-step convergence run; these figures are hardware- and configuration-specific.
+The recorded Muon + AdamW run reached validation loss 1.324593 at 10,000 steps, versus 1.376768 for a historical AdamW run. This is a single-seed comparison, and the old baseline did not retain a dataset hash. The PyTorch-native operator short benchmark measured 1.54× throughput and 42% lower peak tensor allocation on an RTX 3070 Ti, but it did not include a new 10,000-step run.

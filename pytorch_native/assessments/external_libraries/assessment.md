@@ -21,7 +21,7 @@
 
 **第二优先级是优化器、梯度裁剪和交叉熵。** 当前优化器逐参数启动多个运算；fused AdamW 和 foreach 裁剪能合并部分工作。内置交叉熵在本次测试中额外降低了约 1.10 GiB 峰值张量显存，速度收益相对小一些。PyTorch 官方也说明 foreach 和 fused 优化器通常快于逐张量循环。[PyTorch AdamW 文档](https://docs.pytorch.org/docs/stable/generated/torch.optim.AdamW.html)
 
-**进一步引入独立第三方库时，最值得评估 Liger 的 FusedLinearCrossEntropy。** 当前每批完整 logits 有 294,354,944 个元素，仅 BF16 存储就需要约 561 MiB。Liger 将词表投影与交叉熵分块融合，有机会继续降低显存。需要让训练损失直接接收最终隐藏状态和 lm_head 权重，并保留生成所需的 logits 接口。本环境未安装 Liger，因此不对额外加速倍数作承诺。[Liger 独立模型接入示例](https://linkedin.github.io/Liger-Kernel/Getting-Started/)
+**进一步引入独立第三方库时，最值得评估 Liger 的 FusedLinearCrossEntropy。** 当前每批完整 logits 有 294,354,944 个元素，仅 BF16 存储就需要约 561 MiB。Liger 将词表投影与交叉熵分块融合，有机会继续降低显存。需要让训练损失直接接收最终隐藏状态和 lm_head 权重，并保留生成所需的 logits 接口。本报告编写时尚未安装或实测 Liger；后续 GPU 试验已完成，结果见[融合损失评估](../fused_lm_head_ce/assessment.md)。[Liger 独立模型接入示例](https://linkedin.github.io/Liger-Kernel/Getting-Started/)
 
 **文本生成还有独立的优化空间。** generate.py 当前逐 token 重新运行整个上下文，并计算所有位置的词表投影。应优先增加 KV cache、预分配缓存，并只对最新位置计算 lm_head。该改动需要适配 RoPE 偏移和窗口溢出规则，不能只替换一个注意力函数；本次未量化其速度收益。
 

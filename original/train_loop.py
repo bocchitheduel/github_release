@@ -37,6 +37,7 @@ class TrainConfig:
     d_model: int = 512
     d_ffn: int = 1344
     num_layers: int = 4
+    checkpoint_group_size: int = 2
     num_heads: int = 16
     max_seq_len: int = 512
     total_steps: int = 10000
@@ -53,10 +54,13 @@ class TrainConfig:
     beta1: float = 0.9
     beta2: float = 0.999
     optimizer: str = "adamw"
+    loss_backend: str = "torch"
     muon_momentum: float = 0.95
     muon_nesterov: bool = False
     muon_ns_steps: int = 5
     muon_ns_coefficients: tuple[float, float, float] = DEFAULT_NS_COEFFICIENTS
+    muon_ns_precision: str = "tf32x3"
+    muon_update_strategy: str = "fused"
     muon_eps: float = 1e-7
     muon_scaling_mode: str = "rms_to_rms"
     grad_clip: float = 1.0
@@ -82,13 +86,17 @@ _NEW_CONFIG_DEFAULTS = {
     # compatible with the original AdamW defaults, but cannot silently resume
     # into a different optimizer configuration.
     "optimizer": "adamw",
+    "loss_backend": "torch",
     "muon_momentum": 0.95,
     "muon_nesterov": False,
     "muon_ns_steps": 5,
     "muon_ns_coefficients": DEFAULT_NS_COEFFICIENTS,
+    "muon_ns_precision": "tf32x3",
+    "muon_update_strategy": "fused",
     "muon_eps": 1e-7,
     "muon_scaling_mode": "rms_to_rms",
     "gradient_accumulation_steps": 1,
+    "checkpoint_group_size": 2,
     "scheduler": "cosine",
     "muon_lr": None,
     "muon_weight_decay": None,
@@ -162,7 +170,8 @@ def validate_resume_config(config: TrainConfig, extra: dict) -> None:
 
 @torch.no_grad()
 def evaluate_loss(model: torch.nn.Module, loader: DataLoader,
-                  num_batches: int = 20, *, amp: bool = True) -> float:
+                  num_batches: int = 20, *, amp: bool = True,
+                  loss_backend: str = "torch") -> float:
     """Estimate validation loss using reproducible windows without consuming RNG."""
     if num_batches <= 0:
         raise ValueError("num_batches must be positive")
@@ -176,7 +185,10 @@ def evaluate_loss(model: torch.nn.Module, loader: DataLoader,
         for _ in range(num_batches):
             inputs, targets = next(loader)
             with bf16_autocast(loader.device, amp):
-                loss = cross_entropy(model(inputs), targets)
+                if loss_backend == "liger_fused":
+                    loss = model(inputs, targets=targets)
+                else:
+                    loss = cross_entropy(model(inputs), targets)
             loss_sum += loss
         return (loss_sum / num_batches).item()
     finally:
@@ -201,14 +213,22 @@ def train(config: TrainConfig, *, on_metrics: Callable[[dict], None] | None = No
             or isinstance(config.gradient_accumulation_steps, bool)
             or config.gradient_accumulation_steps <= 0):
         raise ValueError("gradient_accumulation_steps must be a positive integer")
+    if (not isinstance(config.checkpoint_group_size, int)
+            or isinstance(config.checkpoint_group_size, bool)
+            or config.checkpoint_group_size < 0):
+        raise ValueError("checkpoint_group_size must be a non-negative integer")
     if any(value <= 0 for value in (config.eval_interval, config.eval_batches,
                                      config.save_interval, config.log_interval)):
         raise ValueError("evaluation, saving and logging intervals must be positive")
     if config.sequence_length > config.max_seq_len:
         raise ValueError("sequence_length cannot exceed max_seq_len")
+    if config.loss_backend not in ("torch", "liger_fused"):
+        raise ValueError("loss_backend must be 'torch' or 'liger_fused'")
     data_metadata = validate_data_metadata(config)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") \
         if config.device == "auto" else torch.device(config.device)
+    if config.loss_backend == "liger_fused" and device.type != "cuda":
+        raise ValueError("loss_backend='liger_fused' requires a CUDA device")
     random.seed(config.seed)
     np.random.seed(config.seed)
     torch.manual_seed(config.seed)
@@ -219,7 +239,9 @@ def train(config: TrainConfig, *, on_metrics: Callable[[dict], None] | None = No
     model = TransformerLM(vocab_size=config.vocab_size, d_model=config.d_model,
                           num_layers=config.num_layers, num_heads=config.num_heads,
                           d_ffn=config.d_ffn, max_seq_len=config.max_seq_len, device=device,
-                          q_block_size=config.q_block_size, kv_block_size=config.kv_block_size)
+                          q_block_size=config.q_block_size, kv_block_size=config.kv_block_size,
+                          checkpoint_group_size=config.checkpoint_group_size,
+                          fused_lm_head_ce=config.loss_backend == "liger_fused")
     optimizer = create_optimizers(model, config)
     step = 0
     if config.resume:
@@ -246,8 +268,9 @@ def train(config: TrainConfig, *, on_metrics: Callable[[dict], None] | None = No
     if config.compile:
         # In-place Module.compile preserves parameter names/state_dict keys.
         model.compile(backend=config.compile_backend, mode=config.compile_mode)
-        loss_function = torch.compile(cross_entropy, backend=config.compile_backend,
-                                      mode=config.compile_mode)
+        if config.loss_backend == "torch":
+            loss_function = torch.compile(cross_entropy, backend=config.compile_backend,
+                                          mode=config.compile_mode)
     if on_metrics is not None:
         interval_loss_sum = torch.zeros((), device=device)
         interval_steps = 0
@@ -260,7 +283,10 @@ def train(config: TrainConfig, *, on_metrics: Callable[[dict], None] | None = No
         for _ in range(config.gradient_accumulation_steps):
             inputs, targets = next(train_loader)
             with bf16_autocast(device, config.amp):
-                loss = loss_function(model(inputs), targets)
+                if config.loss_backend == "liger_fused":
+                    loss = model(inputs, targets=targets)
+                else:
+                    loss = loss_function(model(inputs), targets)
             (loss / config.gradient_accumulation_steps).backward()
             if on_metrics is None:
                 update_loss.add_(loss.detach(), alpha=1 / config.gradient_accumulation_steps)
@@ -287,7 +313,8 @@ def train(config: TrainConfig, *, on_metrics: Callable[[dict], None] | None = No
             print(f"step={step} train_loss={update_loss.item():.6f} lr={lr:.6g} "
                   f"grad_norm={grad_norm.item():.4f}", flush=True)
         if should_evaluate:
-            val_loss = evaluate_loss(model, val_loader, config.eval_batches, amp=config.amp)
+            val_loss = evaluate_loss(model, val_loader, config.eval_batches,
+                                     amp=config.amp, loss_backend=config.loss_backend)
             if on_metrics is None:
                 print(f"step={step} val_loss={val_loss:.6f}", flush=True)
         if should_log and on_metrics is not None:

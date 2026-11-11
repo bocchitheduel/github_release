@@ -1,0 +1,88 @@
+{
+  "status": "passed",
+  "full_range_validation": "Every ID already checked by Julia during write and full binary reread",
+  "python_comparison_scope": "First and last complete-story windows, not a full Python re-tokenization",
+  "dtype": "int64",
+  "numpy_dtype": "<i8",
+  "vocab_size": 8983,
+  "splits": {
+    "train": {
+      "path": "./train.bin",
+      "tokens": 544548083,
+      "bytes": 4356384664,
+      "full_julia_validation": true,
+      "min_id": 9,
+      "max_id": 8982,
+      "sha256": "13ac379e20385078099bf02dabd71ff11f95aebced03e971892f5972a28d4cbd",
+      "python_windows": [
+        {
+          "where": "head",
+          "input_byte_start": 0,
+          "input_bytes": 1048103,
+          "input_sha256": "ae3e5a8f8ec7bbff6f4dadd01aa43cdfdc41023add83ba0f7ecd476029ef7812",
+          "token_ids_compared": 254366,
+          "exact_match": true
+        },
+        {
+          "where": "tail",
+          "input_byte_start": 2226706090,
+          "input_bytes": 1047072,
+          "input_sha256": "413633f37416a5f58be6015c137af564dff6d4e66083110593a23a1d3d1daf1c",
+          "token_ids_compared": 256723,
+          "exact_match": true
+        }
+      ],
+      "real_dataloader": {
+        "default_int64": true,
+        "batch_shape": [
+          4,
+          32
+        ],
+        "torch_dtype": "torch.int64",
+        "target_shift_correct": true
+      }
+    },
+    "validation": {
+      "path": "./val.bin",
+      "tokens": 5499380,
+      "bytes": 43995040,
+      "full_julia_validation": true,
+      "min_id": 10,
+      "max_id": 8982,
+      "sha256": "3001084fc95353e967e8d00f1150b19d90d923c92a033bc0409d8eac32144914",
+      "python_windows": [
+        {
+          "where": "head",
+          "input_byte_start": 0,
+          "input_bytes": 1048085,
+          "input_sha256": "f44454fd625aaa76d5c7ba2122801a29e6e9c57e3572189eae9286b82eba82ff",
+          "token_ids_compared": 256733,
+          "exact_match": true
+        },
+        {
+          "where": "tail",
+          "input_byte_start": 21454138,
+          "input_bytes": 1048463,
+          "input_sha256": "debbfc7d401f0b1e81bfe57b8de40ee5dd7055b0a843a9b998f351f77685f05c",
+          "token_ids_compared": 255933,
+          "exact_match": true
+        }
+      ],
+      "real_dataloader": {
+        "default_int64": true,
+        "batch_shape": [
+          4,
+          32
+        ],
+        "torch_dtype": "torch.int64",
+        "target_shift_correct": true
+      }
+    }
+  },
+  "automatic_split_enabled": false,
+  "split_mode": "provided_files",
+  "original_bpe_sources_unchanged": {
+    "./bpe.py": true,
+    "./bpe_train.py": true
+  }
+}

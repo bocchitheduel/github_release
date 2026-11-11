@@ -1,14 +1,16 @@
 # CS336 Assignment 1 教学级语言模型技术报告
 
-编写日期：2026-10-28（Asia/Shanghai）<br>
-报告对象：项目当前实现、已完成的 10,000 步训练，以及外部库替换性能评估
+编写日期：2026-11-11（Asia/Shanghai）<br>
+报告对象：当前模型实现、AdamW 与 Muon 训练结果、外部算子及注意力内核评估<br>
 主要训练入口：[train_10k.py](train_10k.py)
 
-本项目实现了一套约 2166 万参数的自回归语言模型，涵盖字节级 BPE、数据预处理、Transformer、优化器、训练恢复、文本生成和 Gradio 演示界面。模型采用 4 层 Decoder Transformer，组合 RoPE、RMSNorm、SwiGLU 与因果多头注意力，主要面向 TinyStories 文本续写和语言模型系统教学。
+本项目实现了一套 21,655,040 参数的自回归语言模型，包含字节级 BPE、数据流水线、Transformer、AdamW/Muon 优化器、训练恢复、文本生成和 Gradio 演示界面。模型采用 4 层 Decoder Transformer，组合 RoPE、RMSNorm、SwiGLU 与因果多头注意力，主要面向 TinyStories 文本续写和语言模型系统教学。GitHub 发布目录保留教学实现与 PyTorch 原生算子实现两个版本；它们共享模型参数布局，但算子路径和性能数据需按版本区分。
 
-已完成训练累计处理 327,680,000 个 token，历史检查点的抽样验证交叉熵为 1.376768，困惑度约为 3.962。当前代码已经采用 BF16 AMP、TF32、Inductor 编译、分块注意力及反向重计算等措施。独立短基准显示，进一步使用 PyTorch 的 SDPA、fused AdamW、foreach 梯度裁剪和内置交叉熵，可将当前配置的训练吞吐量提高约 54%，峰值张量显存减少约 42%。
+AdamW 历史 10,000 步运行处理了 327,680,000 个 token，抽样验证交叉熵为 1.376768。另一个 RMS 对齐 Muon+AdamW 10,000 步运行的验证交叉熵为 1.324593；它比 AdamW 基线低 0.052174。两者是独立运行，AdamW 旧记录未保存数据文件哈希，因此结果是有价值的对照证据，但不是多随机种子、逐字节确认数据完全相同的受控复现。
 
-推理专项评估显示，在 batch=1、256-token 初始上下文下，当前受控解码约为 39.3 tokens/s，SDPA 加末位置投影原型约为 259.7 tokens/s；该设置下 KV cache 尚无稳定额外加速。真实请求的固定样例能生成英文故事，但解释性问题和中文指令样例未获得有效回答。推理速度、生成质量和交互延迟分别在第 8 节评估。
+训练算子短基准显示，PyTorch SDPA、fused AdamW、foreach 梯度裁剪与内置交叉熵组合后吞吐量约提高 54%，峰值张量显存约降低 42%；该版本已放在 GitHub 的 `pytorch_native/`。另有独立 Triton 因果注意力内核评测，在 RTX 3070 Ti 上相对之前的本地 Triton 实现降低约 1.4%–7.5% 的前反向延迟；它目前仍是独立内核，不是模型的默认注意力实现。上述算子结果都不是新的完整训练收敛实验。
+
+推理专项评估显示，在 batch=1、256-token 初始上下文下，当前受控解码约为 39.3 tokens/s，SDPA 加末位置投影原型约为 259.7 tokens/s；该设置下 KV cache 尚无稳定额外加速。固定样例能生成英文故事，但解释性问题和中文指令样例未获得有效回答。推理速度、生成质量和交互延迟分别在第 8 节评估。
 
 ## 1. 报告范围与证据口径
 
@@ -16,13 +18,14 @@
 
 | 状态 | 含义 | 主要证据 |
 | --- | --- | --- |
-| 当前已实现 | 正常训练或生成入口实际使用的代码 | 项目根目录 Python 源码 |
-| 已完成训练 | 2026-10-15 的 10,000 步训练记录 | [运行配置](runs/b128_s256_10k_20261015_171649_473135/run_config.json)、[训练指标](runs/b128_s256_10k_20261015_171649_473135/metrics.csv)、[训练结果](runs/b128_s256_10k_20261015_171649_473135/result.json) |
-| 已做性能评估，待正式接入 | 只在独立基准进程中替换算子，尚未修改正常训练路径 | [评估说明](assessments/external_libraries/assessment.md)、[汇总数据](assessments/external_libraries/summary.json)、[基准脚本](assessments/external_libraries/benchmark.py) |
+| 教学实现 | 自定义分块注意力、AdamW、梯度裁剪与交叉熵；Muon 路径可选 | 项目根目录源码；GitHub `original/` |
+| PyTorch 原生实现 | SDPA、PyTorch AdamW、foreach 梯度裁剪和内置交叉熵作为默认训练算子 | GitHub `pytorch_native/`；算子短基准见 [评估说明](assessments/external_libraries/assessment.md) |
+| 完整训练结果 | AdamW 历史 10k 运行，以及 RMS 对齐 Muon+AdamW 10k 运行 | [AdamW 记录](runs/b128_s256_10k_20261015_171649_473135/result.json)、[Muon 对照报告](reports/muon_adamw_rms_alignment_10000.md) |
+| 内核基准 | 独立测试 Triton 注意力及 Muon 更新实现；不等于默认模型训练路径 | [Triton 注意力报告](reports/attention_kv_optimization_20261111.md)、[Muon 内核报告](reports/muon_optimizer_kernel_memory_20261110.md) |
 
 历史运行记录中的 `MH_selfattention.py`、`block_attention.py` 和 `bpe.py` 哈希与当前文件不同。因此，历史 loss 表征该次训练的结果；当前实现的速度采用重新测量的数据。两者不能视为同一代码版本完成的一次实验。
 
-本文以 `train_10k.py` 的实际配置为准。通用 `TrainConfig` 和模块构造器的默认值有所不同，例如通用训练默认 batch 为 16、序列长度为 512，`TransformerLM` 构造器默认词表为 784，均不代表已有主实验配置。
+本文以 `train_10k.py` 的实际配置为准。通用 `TrainConfig` 和模块构造器的默认值有所不同，例如通用训练默认 batch 为 16、序列长度为 512，`TransformerLM` 构造器默认词表为 784，均不代表主实验配置。不同日期的训练和内核基准使用的源码版本也不完全相同，不能拼成同一次运行。
 
 ## 2. 模型架构
 
@@ -243,7 +246,7 @@ CSV 的 `train_loss` 是最近日志区间的平均值；`train_loss_last_batch`
 
 在主实验形状下，单层完整 FP32 分数矩阵 `[128,16,256,256]` 的本体约为 512 MiB；一个 `[128,16,64,64]` 分数块约为 32 MiB。当前无稠密外部掩码的训练路径不保存完整注意力分数或概率矩阵。
 
-反向传播保存 Q/K/V、输出和逐行 logsumexp，然后逐块重算概率并累计梯度。这是在注意力内部以额外计算换取存储节省；它没有覆盖整个 Transformer Block 的激活检查点功能。手写 backward 仅支持一阶导数。
+反向传播保存 Q/K/V、输出和逐行 logsumexp，然后逐块重算概率并累计梯度。这是在注意力内部以额外计算换取存储节省。当前 TransformerLM 还可以按每 2 个 Block 为一组做 PyTorch activation checkpointing（设为 0 时关闭）；两种机制分别减少注意力中间状态和 Block 激活的保留量。手写注意力 backward 仅支持一阶导数。
 
 该实现将低精度输入提升为 FP32 后计算块内运算，有利于教学验证和稳定性，但仍由多个 PyTorch 运算组成。分块策略减少了存储需求，融合内核则进一步减少中间张量读写和 kernel 启动，两者的性能效果需要分别评估。
 
@@ -260,7 +263,7 @@ CSV 的 `train_loss` 是最近日志区间的平均值；`train_loss_last_batch`
 | 降低指标同步频率 | loss 与区间统计主要在日志、保存边界读取到 CPU |
 | 预先校验 token | Embedding 和损失的逐 batch ID 范围检查默认关闭，减少热路径校验 |
 
-当前仍有逐参数优化器循环和梯度范数非有限值检查，CPU/GPU 同步并未被完全消除。上述优化也没有单独的消融基准，本文不将它们各自描述为已量化的加速比例。
+自定义 AdamW 路径仍逐参数更新；Muon 的 CUDA FP32 路径则已按矩阵形状批处理 Newton–Schulz 运算并融合部分更新。Muon 的有限梯度检查仍会同步一次 CPU/GPU，CPU/GPU 同步并未完全消除。逐项收益以第 13 节的独立基准为准。
 
 ### 6.4 数据与推理运行方式
 
@@ -268,7 +271,7 @@ CSV 的 `train_loss` 是最近日志区间的平均值；`train_loss_last_batch`
 
 ## 7. 已完成训练的结果
 
-以下来自 2026-10-15 的历史运行，保留其代码版本口径。
+下表来自 2026-10-15 的 AdamW 历史运行，保留其代码版本口径。
 
 | 完成步数 | 区间平均训练 loss | 抽样验证 loss | 验证 PPL |
 | --- | ---: | ---: | ---: |
@@ -284,6 +287,19 @@ CSV 的 `train_loss` 是最近日志区间的平均值；`train_loss_last_batch`
 排除首个编译窗口后，历史训练吞吐量中位数约为 138,579 tokens/s。日志累计训练计时约 40.27 分钟；从运行配置开始时间到最终指标时间约 55.35 分钟，其中还包含准备、验证等开销，且不精确覆盖最终指标之后的保存时间。
 
 现有记录未提供多随机种子重复实验、独立下游评测或更换后端后的完整收敛对照，不能仅凭短基准推断最终 loss 会改善。
+
+### 7.1 RMS 对齐 Muon + AdamW 对照
+
+2026-10-29 的训练先完成 2,000 步，再从该检查点续训至 10,000 步。Muon 更新 28 个注意力/FFN 矩阵；Embedding、输出头和归一化参数交给 AdamW。关键参数为 Muon LR 0.002、RMS 对齐缩放、momentum 0.95、Nesterov、5 次 Newton–Schulz 迭代、Muon weight decay 0；AdamW LR 0.001、weight decay 0.01。训练仍为 batch 128、序列 256、每步 32,768 token，使用 500 步 warmup 和 10,000 步余弦调度。
+
+| 步数 | Muon 验证 loss | AdamW 验证 loss | Muon−AdamW |
+| ---: | ---: | ---: | ---: |
+| 2,000 | 1.595115 | 1.674658 | -0.079544 |
+| 5,000 | 1.426143 | 1.488260 | -0.062117 |
+| 7,500 | 1.355615 | 1.411683 | -0.056068 |
+| 10,000 | **1.324593** | 1.376768 | **-0.052174** |
+
+100 个共同评估点中，Muon 在 97 点的验证 loss 低于 AdamW；按 10,000 步结果，Muon PPL 约为 3.76，AdamW 约为 3.96。该结果来自单次 seed 和抽样验证；旧 AdamW 运行没有记录原始数据 SHA-256，因此不能确认两个训练 run 使用的文件逐字节相同。它支持该配置值得复现，不足以证明 Muon 对其他 seed 或训练设置普遍占优。详细曲线和逐点数据见[对照报告](reports/muon_adamw_rms_alignment_10000.md)与[指标 CSV](reports/muon_adamw_rms_alignment_10000_metrics.csv)。
 
 ## 8. 推理模块评估与交互界面
 
@@ -317,7 +333,7 @@ CSV 的 `train_loss` 是最近日志区间的平均值；`train_loss_last_batch`
 
 四条真实 GPU 请求也都在重复相同 seed 后得到相同 token 序列。这是当前硬件和数值后端上的有限验证，未证明跨后端、跨版本或所有 prompt 都有相同结果。
 
-证据：[生成单测日志](assessments/inference/unit_tests.log)、[专项检查结果](assessments/inference/contracts.json)。
+专项合约检查结果见[推理评估文件](assessments/inference/contracts.json)。
 
 ### 8.3 当前实现的长度扩展、延迟与显存
 
@@ -433,7 +449,7 @@ Gradio 界面复用生成和加载逻辑，提供 prompt、长度、temperature�
 
 这些数字排除编译、验证、日志和检查点保存。显存指标为 `torch.cuda.max_memory_allocated`，未计入全部驱动占用和分配器保留空间。完整运行还受持续功耗、温度和数据缓存影响；目前未完成这些替换后的 10,000 步收敛实验或旧优化器检查点兼容性验证。
 
-注意力单项约 6 倍的加速记录及其数值小测说明见[独立评估报告](assessments/external_libraries/assessment.md)。本文以已保存原始 JSONL 的整步训练基准作为主要性能证据。
+PyTorch 原生算子版本位于 GitHub `pytorch_native/`，采用 SDPA、fused AdamW、foreach 梯度裁剪和 PyTorch 交叉熵。注意力单项基准的加速记录及数值小测见[独立评估报告](assessments/external_libraries/assessment.md)。本文以已保存原始 JSONL 的整步训练基准作为主要性能证据；没有用短基准替代新的完整收敛实验。
 
 ## 10. 改进方案与实施优先级
 
@@ -446,7 +462,7 @@ Gradio 界面复用生成和加载逻辑，提供 prompt、长度、temperature�
 | P0 | 接入内置交叉熵 | 降低损失计算显存 | 较低；确认 reduction、AMP 精度及目标维度 |
 | P0 | 统一训练、验证后端配置 | 使验证也使用经验证的损失路径 | 较低至中等；分别测量验证耗时和数值一致性 |
 
-注意力后端已实现为可选项：教学模块默认 `block`，推理加载器默认 `sdpa`。其余方案仍未接入。这些方案改变计算实现，保持当前层数和张量尺寸；正式接入时应记录后端选择、PyTorch/CUDA 版本和源码哈希，并先验证少量训练步骤及恢复行为，再做完整训练对照。短基准仅覆盖无额外 attention mask 的主训练路径，不能代替通用注意力接口的全部语义验证。
+这些替换已集中在 GitHub `pytorch_native/` 版本中；教学版本仍保留自定义实现。注意力后端支持 `block`/`sdpa` 切换。短基准只覆盖主训练形状和路径，不能代替通用注意力接口的全部语义验证，也没有验证更换优化器后的检查点状态迁移。要比较模型质量，应记录后端、PyTorch/CUDA 版本和源码哈希，并从相同初始权重启动完整训练。
 
 ### 10.2 第二阶段：减少生成端重复计算
 
@@ -461,9 +477,9 @@ SDPA 和末位置 logits 接口已接入推理路径。每层预分配的 KV cac
 
 ### 10.3 第三阶段：融合词表投影与损失
 
-完整 logits 和相关 FP32 中间结果是当前显存的重要来源。可评估 Liger 的 `FusedLinearCrossEntropy`，直接将最终隐藏状态、LM Head 权重和目标交给融合损失，按块处理词表投影，降低中间结果存储。官方提供[独立模型接入示例](https://linkedin.github.io/Liger-Kernel/Getting-Started/)。
+完整 logits 和相关 FP32 中间结果是当前显存的重要来源。Liger 的 `FusedLinearCrossEntropy` 可直接接收最终隐藏状态、LM Head 权重和目标，按块计算词表投影与损失，并保留普通 logits 路径供生成使用。2026-11-10 在 RTX 3070 Ti 上完成了可选接入和整步试验：前向阶段峰值下降约 126–311 MiB，但反向阶段仍决定整步峰值；当前 128×256 配置的总峰值几乎不变，整步慢约 2–4%。因此目前仅保留为显式实验选项，不设为训练默认值。实现细节、误差和基准数据见[融合损失评估](assessments/fused_lm_head_ce/assessment.md)。
 
-此方案需要新增训练专用的 loss 接口，同时保留生成需要的 logits 接口。应与现有编译方案比较真实训练峰值和耗时；当前环境未安装或测试 Liger，不对新增加速比例作保证。RMSNorm、RoPE、SwiGLU 的专用融合内核也可以在 profiler 确认开销后逐项评估。
+Liger 0.8.5 的损失调用内部包含 `Tensor.item()`，本机 Inductor 无法直接完整捕获该算子；实现将这个调用留在 eager 路径，Transformer 主干继续编译。可在更大 batch 或序列长度使前向 logits 成为显存瓶颈时重新评估。RMSNorm、RoPE、SwiGLU 的专用融合内核也可以在 profiler 确认开销后逐项评估。
 
 ### 10.4 数据与配置管理
 
@@ -483,13 +499,13 @@ SDPA 和末位置 logits 接口已接入推理路径。每层预分配的 KV cac
 
 ### 11.1 本次核验结果
 
-报告编写时执行了现有 unittest 测试集，共发现 22 个测试文件、104 个测试方法。运行结果为 **104 项中 103 项通过、1 项因 CUDA 不可用跳过，无失败**；跳过项为 DataLoader 的 CUDA 设备测试。此次测试在 CPU 环境完成，独立 GPU 性能基准使用第 9 节所述环境。
+2026-10-28 的报告版本记录了当时的 unittest 结果：22 个测试文件、104 个测试方法，**103 项通过、1 项因 CUDA 不可用跳过，无失败**；跳过项为 DataLoader 的 CUDA 设备测试。这是历史源码版本的测试记录，不代表本次 2026-11-11 更新后重新运行了整套测试。
 
 覆盖内容包括模块形状和参考数值、注意力因果性和梯度检查、掩码与非连续张量、低精度稳定性、BPE 流式边界、数据身份、检查点恢复、训练中断恢复及采样行为。小模型测试和短基准均不能替代完整配置的长期训练验证。
 
-测试日志：[assessments/technical_report_tests.log](assessments/technical_report_tests.log)。本次同时重新核对了参数量、历史指标摘要与分词器词表规模。
+历史测试日志作为本地运行产物没有随 GitHub 发布；同时复核了模型参数量、历史指标摘要与分词器词表规模。
 
-推理补充评估单独重跑了 4 项生成单测，并执行 6 组专项合约检查，全部通过；另有真实 GPU 请求的重复 seed 检查和缓存数值对照，见第 8 节。专项检查脚本位于评估目录，不计入上述 `tests/` 的 104 项统计。
+后续专项测试分别记录在评估报告中：Muon 更新测试为 9 项通过、5 个子测试通过；Triton 注意力测试为 7 项通过、12 个子测试通过。推理补充评估单独执行了 4 项生成单测和 6 组专项合约检查，见第 8 节。这些是分日期、分范围的记录，不等于当前发布快照的统一整套测试结果。
 
 当前解释器及依赖快照：Python 3.14.4、PyTorch 2.14.0+cu126、NumPy 2.5.4、regex 2026.9.29、Triton 3.8.0、Gradio 6.30.0。该快照描述当前环境，不代表各组件均在本次报告中完成运行验证。
 
@@ -512,7 +528,7 @@ SDPA 和末位置 logits 接口已接入推理路径。每层预分配的 KV cac
 ```bash
 .venv/bin/python generate.py \
   --checkpoint runs/b128_s256_10k_20261015_171649_473135/checkpoints/latest.pt \
-  --tokenizer-path tokenizer_julia/models/sample_model.toml \
+  --tokenizer-path /path/to/tokenizer.toml \
   --prompt "Once upon a time" \
   --max-new-tokens 128 --temperature 0.8 --top-p 0.9 --seed 42
 ```
@@ -521,7 +537,7 @@ SDPA 和末位置 logits 接口已接入推理路径。每层预分配的 KV cac
 
 ```bash
 .venv/bin/python web_ui.py \
-  --tokenizer-path tokenizer_julia/models/sample_model.toml
+  --tokenizer-path /path/to/tokenizer.toml
 ```
 
 运行本次使用的测试命令：
@@ -549,14 +565,32 @@ OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
 | 主题 | 文件 |
 | --- | --- |
 | 模型装配与 Block | [transformer_LM.py](transformer_LM.py)、[transformer_block.py](transformer_block.py) |
-| 注意力与 RoPE | [MH_selfattention.py](MH_selfattention.py)、[block_attention.py](block_attention.py)、[RoPE_module.py](RoPE_module.py) |
+| 注意力与 RoPE | [MH_selfattention.py](MH_selfattention.py)、[block_attention.py](block_attention.py)、[block_attention_triton.py](block_attention_triton.py)、[RoPE_module.py](RoPE_module.py) |
 | 基础层与初始化 | [embedding_module.py](embedding_module.py)、[linear_module.py](linear_module.py)、[ffn_module.py](ffn_module.py)、[rms_normalization.py](rms_normalization.py)、[parameter_init.py](parameter_init.py) |
-| 损失与优化 | [crossentropy.py](crossentropy.py)、[adamW.py](adamW.py)、[train_utils.py](train_utils.py)、[amp_utils.py](amp_utils.py) |
+| 损失与优化 | [crossentropy.py](crossentropy.py)、[adamW.py](adamW.py)、[muon.py](muon.py)、[muon_kernels.py](muon_kernels.py)、[train_utils.py](train_utils.py)、[amp_utils.py](amp_utils.py) |
 | 数据与分词 | [bpe_train.py](bpe_train.py)、[bpe.py](bpe.py)、[prepare_data.py](prepare_data.py)、[dataloader.py](dataloader.py)、[data_metadata.py](data_metadata.py) |
 | 训练与恢复 | [train_10k.py](train_10k.py)、[train_loop.py](train_loop.py)、[checkpoint.py](checkpoint.py) |
 | 生成与界面 | [generate.py](generate.py)、[web_ui.py](web_ui.py) |
-| 完整训练证据 | [运行配置](runs/b128_s256_10k_20261015_171649_473135/run_config.json)、[指标 CSV](runs/b128_s256_10k_20261015_171649_473135/metrics.csv)、[结果 JSON](runs/b128_s256_10k_20261015_171649_473135/result.json) |
+| 完整训练证据 | [AdamW 运行配置](runs/b128_s256_10k_20261015_171649_473135/run_config.json)、[AdamW 指标 CSV](runs/b128_s256_10k_20261015_171649_473135/metrics.csv)、[Muon 10k 对照报告](reports/muon_adamw_rms_alignment_10000.md)、[Muon 逐点评估](reports/muon_adamw_rms_alignment_10000_metrics.csv) |
 | 性能评估证据 | [评估报告](assessments/external_libraries/assessment.md)、[原始当前实现测量](assessments/external_libraries/current.jsonl)、[原始全部替换测量](assessments/external_libraries/sdpa_fused_ce.jsonl)、[汇总](assessments/external_libraries/summary.json)、[源码哈希](assessments/external_libraries/source_hashes.json) |
 | 推理评估证据 | [方法说明](assessments/inference/README.md)、[原始数据](assessments/inference/results.jsonl)、[汇总](assessments/inference/summary.json)、[文本样例](assessments/inference/samples.md)、[正确性检查](assessments/inference/contracts.json)、[源码哈希](assessments/inference/source_hashes.json) |
+| 新增 Muon 内核材料 | [更新精度评估](reports/muon_precision_update_20261110.md)、[时延与显存评估](reports/muon_optimizer_kernel_memory_20261110.md)、[同步开销评估](reports/muon_sync_benchmark_20261110.md)、[`muon_kernels.py`](muon_kernels.py) |
+| 新增 Triton 注意力材料 | [实现与结果](reports/attention_kv_optimization_20261111.md)、[最终基准数据](reports/attention_fa2_steady_20261111.json)、[最终 profile](reports/attention_kv_final_20261111.json)、[`block_attention_triton.py`](block_attention_triton.py) |
 
-后续正式接入优化方案时，应更新本报告中的后端状态、源码哈希、完整训练结果和性能测量日期，使模型质量结果与具体实现版本保持对应。
+## 13. 2026-11-11 模型与内核更新
+
+### 13.1 Muon CUDA 更新路径
+
+当前教学版本的 Muon CUDA FP32 路径把 28 个矩阵按 Newton–Schulz 逻辑形状分组，批量执行 Gram 矩阵乘法，并以 Triton 融合 momentum/Nesterov 和参数更新。相对先前逐矩阵 eager 路径，Muon-only 更新中位延迟由 38.77 ms 降至 26.28 ms（低 32.3%），profile 中 kernel launch 从 1,911 次降至 72 次；峰值分配显存从 205.64 MiB 升至 388.01 MiB。Muon+AdamW 更新包的中位延迟从 41.05 ms 降至 28.78 ms，峰值显存从 313.24 MiB 升至 514.05 MiB。该内存统计只涵盖优化器更新，不含训练激活。首次调用还包含 CUDA/Triton 初始化，不能用冷启动时间代表稳态性能。
+
+默认 Newton–Schulz 精度仍为 `tf32x3`。独立更新评测中，`tf32x3` 的完整参数更新相对 FP32 矩阵实现误差约 `2.94e-4`，Muon-only update 约 3.17 ms；`tf32` 误差约 `2.21e-3`，约 1.99 ms。低精度路径可通过配置选择，但这些短程优化器更新测量不包含语言模型前后向，也没有比较完整训练质量。
+
+### 13.2 Triton 注意力内核
+
+新实现以 KV 外循环累计 dK/dV，并通过 FP32 atomic 累加 dQ；前向和反向使用在线 softmax/概率重算，不存完整注意力矩阵。它保留输入 stride、支持 BF16/FP16 dot 和 autotune。当前测试代码在 RTX 3070 Ti、BF16、batch 1、8 heads、head dimension 64 下，与 FlashAttention 2.8.3 对照：长度 128、512、1024、2048 的本地前反向时间分别为 15.40、74.11、237.80、703.22 微秒；FA2 分别为 29.47、89.04、244.63、696.21 微秒。相对修改前本地版本分别减少 6.2%、6.5%、1.4%、7.5%。在更长序列上它与 FA2 接近，2048 时约慢 1%。
+
+输出和梯度在所测形状通过 BF16 误差阈值检查，测试覆盖了非连续 stride、非方形序列、因果边界和 CUDA Graph 重放。测量仅代表本机、当前 tile/autotune、batch/head/dtype 组合；长度 1024/2048 上与 FA2 的差异很小，不应外推到其他 GPU。该模块目前由独立 benchmark 直接调用，`MH_selfattention.py` 的默认 `block`/`sdpa` 路径没有调用它，因此这些延迟不是本报告中 10k 模型训练吞吐量的一部分。
+
+### 13.3 当前版本的结果边界
+
+Muon+AdamW 的 10k 结果描述训练质量；Muon 更新和 Triton 注意力结果描述算子性能；PyTorch 原生版本的 1.54× 吞吐量结果描述短训练基准。三类结果使用的源码状态、调用范围和统计口径不同。任何一种都不能单独证明新内核降低了完整训练时间或改善了验证 loss。复现实验应使用同一初始 checkpoint、数据哈希、seed、token 预算和验证窗口，并单独报告峰值显存及稳态吞吐量。

@@ -1,0 +1,222 @@
+[
+  {
+    "length": 128,
+    "batch": 1,
+    "heads": 8,
+    "dim": 64,
+    "dtype": "bfloat16",
+    "device": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+    "torch": "2.6.0+cu126",
+    "triton": "3.8.0",
+    "local_fwd_us": 5.35999983549118,
+    "fa2_fwd_us": 9.10400040447712,
+    "local_fwd_bwd_us": 15.39899967610836,
+    "fa2_fwd_bwd_us": 29.472000896930695,
+    "forward_config": "BM=32,BN=128,warps=4,stages=2",
+    "backward_config": "BM=64,BN=32,warps=4,stages=1",
+    "max_output_error": 0.0,
+    "max_grad_error": 0.00048828125,
+    "baseline_fwd_bwd_us": 16.416000202298164,
+    "local_kernels": [
+      {
+        "name": "_attention_forward_kernel",
+        "us": 5.682000000000062
+      },
+      {
+        "name": "_attention_delta_kernel",
+        "us": 1.855199999999968
+      },
+      {
+        "name": "_attention_backward_kv_outer_kernel",
+        "us": 8.957000000000154
+      },
+      {
+        "name": "_cast_fp32_gradient_kernel",
+        "us": 1.5229999999999564
+      }
+    ],
+    "fa2_kernels": [
+      {
+        "name": "void flash::flash_fwd_kernel<Flash_fwd_kernel_traits<64, 128, 128, 4, false, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 128, 128, 4, cutlass::bfloat16_t> >, false, true, false, false, true, true, false, false>(flash::Flash_fwd_params)",
+        "us": 10.088200000000052
+      },
+      {
+        "name": "void flash::flash_bwd_dot_do_o_kernel<true, Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> > >(flash::Flash_bwd_params)",
+        "us": 2.5926000000001297
+      },
+      {
+        "name": "void flash::flash_bwd_dq_dk_dv_loop_seqk_parallel_kernel<Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> >, false, true, false, false, true, true, false>(flash::Flash_bwd_params)",
+        "us": 18.134400000000095
+      },
+      {
+        "name": "void flash::flash_bwd_convert_dq_kernel<Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> > >(flash::Flash_bwd_params, int)",
+        "us": 2.59240000000018
+      }
+    ]
+  },
+  {
+    "length": 512,
+    "batch": 1,
+    "heads": 8,
+    "dim": 64,
+    "dtype": "bfloat16",
+    "device": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+    "torch": "2.6.0+cu126",
+    "triton": "3.8.0",
+    "local_fwd_us": 22.873500362038612,
+    "fa2_fwd_us": 26.152249425649643,
+    "local_fwd_bwd_us": 74.10825043916702,
+    "fa2_fwd_bwd_us": 89.03674781322479,
+    "forward_config": "BM=32,BN=128,warps=4,stages=2",
+    "backward_config": "BM=32,BN=32,warps=4,stages=3",
+    "max_output_error": 0.001953125,
+    "max_grad_error": 0.0078125,
+    "baseline_fwd_bwd_us": 79.28825169801712,
+    "local_kernels": [
+      {
+        "name": "_attention_delta_kernel",
+        "us": 3.183600000000115
+      },
+      {
+        "name": "_attention_backward_kv_outer_kernel",
+        "us": 41.54240000000004
+      },
+      {
+        "name": "_cast_fp32_gradient_kernel",
+        "us": 2.2373999999998886
+      },
+      {
+        "name": "_attention_forward_kernel",
+        "us": 18.354599999999937
+      }
+    ],
+    "fa2_kernels": [
+      {
+        "name": "void flash::flash_bwd_dot_do_o_kernel<true, Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> > >(flash::Flash_bwd_params)",
+        "us": 4.334200000000147
+      },
+      {
+        "name": "void flash::flash_bwd_dq_dk_dv_loop_seqk_parallel_kernel<Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> >, false, true, false, false, true, true, false>(flash::Flash_bwd_params)",
+        "us": 56.6492000000002
+      },
+      {
+        "name": "void flash::flash_bwd_convert_dq_kernel<Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> > >(flash::Flash_bwd_params, int)",
+        "us": 3.0428000000001703
+      },
+      {
+        "name": "void flash::flash_fwd_kernel<Flash_fwd_kernel_traits<64, 128, 128, 4, false, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 128, 128, 4, cutlass::bfloat16_t> >, false, true, false, false, true, true, false, false>(flash::Flash_fwd_params)",
+        "us": 22.245599999999833
+      }
+    ]
+  },
+  {
+    "length": 1024,
+    "batch": 1,
+    "heads": 8,
+    "dim": 64,
+    "dtype": "bfloat16",
+    "device": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+    "torch": "2.6.0+cu126",
+    "triton": "3.8.0",
+    "local_fwd_us": 62.93175369501114,
+    "fa2_fwd_us": 79.73899692296982,
+    "local_fwd_bwd_us": 237.80415952205658,
+    "fa2_fwd_bwd_us": 244.62907016277313,
+    "forward_config": "BM=64,BN=64,warps=4,stages=2",
+    "backward_config": "BM=64,BN=64,warps=4,stages=1",
+    "max_output_error": 0.00390625,
+    "max_grad_error": 0.015625,
+    "baseline_fwd_bwd_us": 241.20569229125977,
+    "local_kernels": [
+      {
+        "name": "_attention_backward_kv_outer_kernel",
+        "us": 139.2782000000001
+      },
+      {
+        "name": "_cast_fp32_gradient_kernel",
+        "us": 5.772000000000207
+      },
+      {
+        "name": "_attention_forward_kernel",
+        "us": 54.47899999999991
+      },
+      {
+        "name": "_attention_delta_kernel",
+        "us": 4.496400000000085
+      }
+    ],
+    "fa2_kernels": [
+      {
+        "name": "void flash::flash_bwd_dq_dk_dv_loop_seqk_parallel_kernel<Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> >, false, true, false, false, true, true, false>(flash::Flash_bwd_params)",
+        "us": 149.4257999999999
+      },
+      {
+        "name": "void flash::flash_bwd_convert_dq_kernel<Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> > >(flash::Flash_bwd_params, int)",
+        "us": 6.252599999999802
+      },
+      {
+        "name": "void flash::flash_fwd_kernel<Flash_fwd_kernel_traits<64, 128, 128, 4, false, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 128, 128, 4, cutlass::bfloat16_t> >, false, true, false, false, true, true, false, false>(flash::Flash_fwd_params)",
+        "us": 69.44200000000009
+      },
+      {
+        "name": "void flash::flash_bwd_dot_do_o_kernel<true, Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> > >(flash::Flash_bwd_params)",
+        "us": 6.44399999999996
+      }
+    ]
+  },
+  {
+    "length": 2048,
+    "batch": 1,
+    "heads": 8,
+    "dim": 64,
+    "dtype": "bfloat16",
+    "device": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+    "torch": "2.6.0+cu126",
+    "triton": "3.8.0",
+    "local_fwd_us": 186.75674498081207,
+    "fa2_fwd_us": 221.70700132846832,
+    "local_fwd_bwd_us": 703.2225131988525,
+    "fa2_fwd_bwd_us": 696.214497089386,
+    "forward_config": "BM=64,BN=64,warps=4,stages=2",
+    "backward_config": "BM=64,BN=64,warps=4,stages=1",
+    "max_output_error": 0.00390625,
+    "max_grad_error": 0.0078125,
+    "baseline_fwd_bwd_us": 760.3085041046143,
+    "local_kernels": [
+      {
+        "name": "_attention_forward_kernel",
+        "us": 146.96060000000017
+      },
+      {
+        "name": "_attention_delta_kernel",
+        "us": 13.067400000000088
+      },
+      {
+        "name": "_attention_backward_kv_outer_kernel",
+        "us": 375.7307999999997
+      },
+      {
+        "name": "_cast_fp32_gradient_kernel",
+        "us": 11.323199999999815
+      }
+    ],
+    "fa2_kernels": [
+      {
+        "name": "void flash::flash_fwd_kernel<Flash_fwd_kernel_traits<64, 128, 128, 4, false, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 128, 128, 4, cutlass::bfloat16_t> >, false, true, false, false, true, true, false, false>(flash::Flash_fwd_params)",
+        "us": 186.72580000000016
+      },
+      {
+        "name": "void flash::flash_bwd_dot_do_o_kernel<true, Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> > >(flash::Flash_bwd_params)",
+        "us": 14.71180000000004
+      },
+      {
+        "name": "void flash::flash_bwd_dq_dk_dv_loop_seqk_parallel_kernel<Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> >, false, true, false, false, true, true, false>(flash::Flash_bwd_params)",
+        "us": 349.6143999999998
+      },
+      {
+        "name": "void flash::flash_bwd_convert_dq_kernel<Flash_bwd_kernel_traits<64, 64, 128, 8, 2, 4, 4, true, false, cutlass::bfloat16_t, Flash_kernel_traits<64, 64, 128, 8, cutlass::bfloat16_t> > >(flash::Flash_bwd_params, int)",
+        "us": 11.819400000000133
+      }
+    ]
+  }
+]

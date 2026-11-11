@@ -1,0 +1,2 @@
+# Optional Triton fused LM-head projection + cross-entropy training path.
+liger-kernel==0.8.5

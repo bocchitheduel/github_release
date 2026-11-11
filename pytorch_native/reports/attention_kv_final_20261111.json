@@ -1,0 +1,19 @@
+[
+  {
+    "length": 128,
+    "transposed": true,
+    "block_m": 32,
+    "block_n": 32,
+    "num_warps": 4,
+    "num_stages": 3,
+    "best": true,
+    "fwd_bwd_us": 15.22199995815754,
+    "main_us": 8.303999900817871,
+    "delta_us": 1.4954999787732959,
+    "zero_us": 0.0,
+    "cast_us": 1.247250009328127,
+    "registers": 209,
+    "spills": 0,
+    "shared_bytes": 37376
+  }
+]

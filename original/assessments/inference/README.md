@@ -53,4 +53,4 @@ OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
 .venv/bin/python -u assessments/inference/benchmark.py
 ```
 
-GPU 基准要求可用 CUDA，默认读取已有检查点和 `tokenizer_julia/models/sample_model.toml`，支持用 `--checkpoint`、`--tokenizer` 指定路径。它会覆盖 results.jsonl、source_hashes.json，并自动更新 summary.json 和 samples.md；CPU 专项检查脚本会覆盖 contracts.json。技术报告中的静态表格需在重新基准后同步更新。
+GPU 基准要求可用 CUDA，默认读取已有检查点和 `/path/to/tokenizer.toml`，支持用 `--checkpoint`、`--tokenizer` 指定路径。它会覆盖 results.jsonl、source_hashes.json，并自动更新 summary.json 和 samples.md；CPU 专项检查脚本会覆盖 contracts.json。技术报告中的静态表格需在重新基准后同步更新。

@@ -1,0 +1,53 @@
+[
+  {
+    "length": 128,
+    "transposed": true,
+    "block_m": 64,
+    "block_n": 32,
+    "num_warps": 4,
+    "num_stages": 3,
+    "best": true,
+    "fwd_bwd_us": 17.59199984371662,
+    "main_us": 8.215374778956175,
+    "delta_us": 1.3551922063641562,
+    "zero_us": 0.9690456955389819,
+    "cast_us": 1.410065554693097,
+    "registers": 202,
+    "spills": 0,
+    "shared_bytes": 54272
+  },
+  {
+    "length": 512,
+    "transposed": true,
+    "block_m": 16,
+    "block_n": 16,
+    "num_warps": 4,
+    "num_stages": 1,
+    "best": true,
+    "fwd_bwd_us": 180.32439053058624,
+    "main_us": 126.61497409527117,
+    "delta_us": 4.049454493956132,
+    "zero_us": 3.9716571569442753,
+    "cast_us": 3.74664601121454,
+    "registers": 128,
+    "spills": 0,
+    "shared_bytes": 10240
+  },
+  {
+    "length": 1024,
+    "transposed": true,
+    "block_m": 32,
+    "block_n": 32,
+    "num_warps": 4,
+    "num_stages": 3,
+    "best": true,
+    "fwd_bwd_us": 414.90620374679565,
+    "main_us": 283.51635251726424,
+    "delta_us": 4.966231069155652,
+    "zero_us": 5.263242523160521,
+    "cast_us": 4.917894735148079,
+    "registers": 209,
+    "spills": 0,
+    "shared_bytes": 37376
+  }
+]

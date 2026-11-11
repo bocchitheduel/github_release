@@ -1,0 +1,6 @@
+{"event": "environment", "gpu": "NVIDIA GeForce RTX 3070 Ti Laptop GPU", "torch": "2.14.0+cu126", "variant": "native"}
+{"event": "starting_compile", "parameters": 21655040}
+{"event": "first_step_complete", "seconds": 2.6835290709999526}
+{"event": "memory_stages", "forward_peak_mib": 941.67333984375, "after_forward_mib": 933.11181640625, "backward_peak_mib": 1829.85693359375, "full_step_peak_mib": 1829.85693359375, "loss": 8.27914810180664, "grad_norm": 2.03401255607605}
+{"event": "fixed_batch_train_step", "ms": 192.8469795000069, "samples_ms": [195.44307879999678, 191.29577019999715, 190.0193583000032, 192.8469795000069, 214.3923225000094], "tokens_per_second": 169917.1025906518, "peak_allocated_mib": 1829.85693359375}
+{"event": "train_step_with_loader", "data_pages_prewarmed": true, "ms": 194.19149100000368, "samples_ms": [213.9165764999916, 199.52444409999543, 194.19149100000368, 191.15141769999582, 190.53478270000141], "tokens_per_second": 168740.65815787663, "peak_allocated_mib": 1829.85693359375}

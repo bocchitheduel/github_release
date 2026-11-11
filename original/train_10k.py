@@ -96,6 +96,9 @@ class MetricsWriter:
 
 def build_config(output: Path, resume: Path | None, *, optimizer: str = "adamw",
                  muon_scaling_mode: str = "rms_to_rms",
+                 muon_ns_precision: str = "tf32x3",
+                 muon_update_strategy: str = "fused",
+                 loss_backend: str = "torch",
                  gradient_accumulation_steps: int = 1,
                  config_path: Path | None = None):
     from train_loop import TrainConfig
@@ -124,7 +127,10 @@ def build_config(output: Path, resume: Path | None, *, optimizer: str = "adamw",
         beta1=0.9,
         beta2=0.999,
         optimizer=optimizer,
+        loss_backend=loss_backend,
         muon_scaling_mode=muon_scaling_mode,
+        muon_ns_precision=muon_ns_precision,
+        muon_update_strategy=muon_update_strategy,
         grad_clip=1.0,
         log_interval=100,
         eval_interval=100,
@@ -193,8 +199,15 @@ def main() -> None:
                         help="resume a checkpoint created with this 10,000-step schedule")
     parser.add_argument("--optimizer", choices=("adamw", "muon_rms_to_rms", "muon_original"),
                         default="adamw", help="optimizer path; Muon uses AdamW for embeddings/norms/output")
+    parser.add_argument("--loss-backend", choices=("torch", "liger_fused"),
+                        default="torch",
+                        help="training loss path; liger_fused avoids materializing LM-head logits")
     parser.add_argument("--muon-scaling-mode", choices=("rms_to_rms", "original", "rms_alignment", "match_rms_adamw"),
                         default="rms_to_rms", help="shape scaling for muon_rms_to_rms experiments")
+    parser.add_argument("--muon-ns-precision", choices=("tf32x3", "tf32", "bf16", "fp16"),
+                        default="tf32x3", help="GEMM precision used by Muon Newton-Schulz iterations")
+    parser.add_argument("--muon-update-strategy", choices=("fused", "foreach"),
+                        default="fused", help="CUDA parameter update implementation")
     parser.add_argument("--gradient-accumulation-steps", type=int, default=1,
                         help="microbatches per optimizer update")
     parser.add_argument("--dry-run", action="store_true",
@@ -240,6 +253,9 @@ def main() -> None:
 
     config = build_config(output, resume, optimizer=args.optimizer,
                           muon_scaling_mode=args.muon_scaling_mode,
+                          muon_ns_precision=args.muon_ns_precision,
+                          muon_update_strategy=args.muon_update_strategy,
+                          loss_backend=args.loss_backend,
                           gradient_accumulation_steps=args.gradient_accumulation_steps,
                           config_path=args.config.expanduser().resolve() if args.config else None)
     if not torch.cuda.is_available():

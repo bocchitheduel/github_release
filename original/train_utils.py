@@ -42,10 +42,10 @@ def clip_grad_norm_(parameters: Iterable[torch.Tensor] | torch.Tensor,
 
     Parameters without gradients are skipped. All gradients receive the same
     scaling factor min(1, max_norm / (norm + eps)); low-precision norm
-    accumulation uses float32. Norms are scaled before squaring to avoid
-    underflow/overflow. Low-precision multiplication uses float32 as well;
-    the coefficient is never cast to the low-precision gradient dtype.
-    Nonfinite gradients raise before modification.
+    accumulation uses float32. Safe FP32 CUDA gradients use batched foreach
+    operations; extreme values use scaled norms to avoid underflow/overflow.
+    Low-precision multiplication uses float32, so the coefficient is not cast
+    to the gradient dtype. Nonfinite gradients raise before modification.
     """
     if not math.isfinite(max_norm) or max_norm < 0:
         raise ValueError("max_norm must be finite and nonnegative")
@@ -53,17 +53,18 @@ def clip_grad_norm_(parameters: Iterable[torch.Tensor] | torch.Tensor,
         raise ValueError("eps must be finite and positive")
     if isinstance(parameters, torch.Tensor):
         parameters = [parameters]
+    active_parameters = []
     grads = []
     seen = set()
     for parameter in parameters:
         if parameter.grad is not None and id(parameter) not in seen:
             seen.add(id(parameter))
+            active_parameters.append(parameter)
             grads.append(parameter.grad)
     if not grads:
         return torch.tensor(0.0)
     if any(grad.is_sparse for grad in grads):
         raise RuntimeError("clip_grad_norm_ requires dense gradients")
-    norm_device = grads[0].device
     def stable_l2(values):
         if values.numel() == 0:
             return values.new_zeros(())
@@ -71,18 +72,48 @@ def clip_grad_norm_(parameters: Iterable[torch.Tensor] | torch.Tensor,
         divisor = torch.where(magnitude == 0, torch.ones_like(magnitude), magnitude)
         return torch.linalg.vector_norm(values / divisor) * magnitude
 
-    norms = [stable_l2(
-        grad.float() if grad.dtype in (torch.float16, torch.bfloat16) else grad
-    ).to(norm_device) for grad in grads]
-    total_norm = stable_l2(torch.stack(norms))
-    if not torch.isfinite(total_norm):
-        raise RuntimeError("cannot clip nonfinite gradient norm")
-    scale = (max_norm / (total_norm + eps)).clamp(max=1.0)
-    for grad in grads:
-        if grad.dtype in (torch.float16, torch.bfloat16):
-            work = grad.float()
-            work.mul_(scale.to(device=grad.device, dtype=torch.float32))
-            grad.copy_(work)
-        else:
-            grad.mul_(scale.to(device=grad.device, dtype=grad.dtype))
-    return total_norm
+    norm_device = grads[0].device
+
+    def stable_clip():
+        norms = [stable_l2(
+            grad.float() if grad.dtype in (torch.float16, torch.bfloat16) else grad
+        ).to(norm_device) for grad in grads]
+        total_norm = stable_l2(torch.stack(norms))
+        if not torch.isfinite(total_norm):
+            raise RuntimeError("cannot clip nonfinite gradient norm")
+        scale = (max_norm / (total_norm + eps)).clamp(max=1.0)
+        for grad in grads:
+            if grad.dtype in (torch.float16, torch.bfloat16):
+                work = grad.float()
+                work.mul_(scale.to(device=grad.device, dtype=torch.float32))
+                grad.copy_(work)
+            else:
+                grad.mul_(scale.to(device=grad.device, dtype=grad.dtype))
+        return total_norm
+
+    # The training path has FP32 gradients on one CUDA device. Multi-tensor
+    # norms and scaling avoid launching a separate sequence of kernels for
+    # every parameter. Keep the scaled norm implementation for low precision,
+    # mixed-device inputs, and values outside FP32's safe sum-of-squares range.
+    if (norm_device.type == "cuda"
+            and all(grad.device == norm_device and grad.dtype == torch.float32
+                    and grad.numel() > 0 for grad in grads)):
+        norms = torch._foreach_norm(grads, 2)
+        norm_values = torch.stack(norms)
+        total_norm = torch.linalg.vector_norm(norm_values)
+
+        # A nonfinite norm signals overflow or nonfinite input. Below this
+        # bound, even a full tensor's worth of underflowed squares could affect
+        # the result, so use the scaled implementation for that rare case.
+        element_count = sum(grad.numel() for grad in grads)
+        finfo = torch.finfo(torch.float32)
+        safe_min = math.sqrt(element_count * finfo.tiny / finfo.eps)
+        needs_stable_norm = ~torch.isfinite(total_norm) | (total_norm < safe_min)
+        if needs_stable_norm:
+            return stable_clip()
+
+        scale = (max_norm / (total_norm + eps)).clamp(max=1.0)
+        torch._foreach_mul_(grads, scale)
+        return total_norm
+
+    return stable_clip()

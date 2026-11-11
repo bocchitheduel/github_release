@@ -10,7 +10,8 @@ import torch
 from torch.autograd.function import once_differentiable
 
 
-def _scores(q, k, row_start, col_start, scale, attn_mask=None):
+def _scores(q, k, row_start, col_start, scale, query_positions,
+            key_positions, attn_mask=None):
     scores = (q @ k.transpose(-2, -1)) * scale
     if attn_mask is not None:
         tile = attn_mask[..., row_start:row_start + q.shape[-2],
@@ -19,9 +20,15 @@ def _scores(q, k, row_start, col_start, scale, attn_mask=None):
             scores = scores.masked_fill(~tile, -torch.inf)
         else:
             scores = scores + tile.to(scores.dtype)
-    rows = torch.arange(row_start, row_start + q.shape[-2], device=q.device)
-    cols = torch.arange(col_start, col_start + k.shape[-2], device=k.device)
-    return scores.masked_fill(cols[None, :] > rows[:, None], -torch.inf)
+    # Most KV tiles are wholly before this query tile and need no causal mask.
+    # Reuse the position vectors created once per forward/backward call instead
+    # of launching two arange kernels for every score tile.
+    last_col = col_start + k.shape[-2] - 1
+    if last_col > row_start:
+        rows = query_positions[row_start:row_start + q.shape[-2]]
+        cols = key_positions[col_start:col_start + k.shape[-2]]
+        scores = scores.masked_fill(cols[None, :] > rows[:, None], -torch.inf)
+    return scores
 
 
 class _BlockAttention(torch.autograd.Function):
@@ -34,15 +41,19 @@ class _BlockAttention(torch.autograd.Function):
             scale = 1 / math.sqrt(d)
             output = torch.zeros(q.shape[:-1] + (v.shape[-1],), device=q.device, dtype=dtype)
             logsumexp = torch.empty(q.shape[:-1], device=q.device, dtype=dtype)
+            query_positions = torch.arange(q.shape[-2], device=q.device)
+            key_positions = torch.arange(k.shape[-2], device=k.device)
             for i in range(0, n, q_block_size):
                 qi = qf[..., i:i + q_block_size, :]
                 shape = qi.shape[:-1] + (1,)
                 maximum = torch.full(shape, -torch.inf, device=q.device, dtype=dtype)
                 normalizer = torch.zeros(shape, device=q.device, dtype=dtype)
                 accumulator = torch.zeros(qi.shape[:-1] + (v.shape[-1],), device=q.device, dtype=dtype)
-                for j in range(0, min(i + q_block_size, k.shape[-2]), kv_block_size):
+                kv_stop = min(i + qi.shape[-2], k.shape[-2])
+                for j in range(0, kv_stop, kv_block_size):
                     kj, vj = kf[..., j:j + kv_block_size, :], vf[..., j:j + kv_block_size, :]
-                    scores = _scores(qi, kj, i, j, scale, attn_mask)
+                    scores = _scores(qi, kj, i, j, scale, query_positions,
+                                     key_positions, attn_mask)
                     new_max = torch.maximum(maximum, scores.amax(-1, keepdim=True))
                     shift = new_max.masked_fill(torch.isneginf(new_max), 0)
                     alpha = (maximum - shift).exp()
@@ -68,6 +79,8 @@ class _BlockAttention(torch.autograd.Function):
                   if attn_mask is not None and ctx.needs_input_grad[5] else None)
             n, d = q.shape[-2:]
             scale = 1 / math.sqrt(d)
+            query_positions = torch.arange(q.shape[-2], device=q.device)
+            key_positions = torch.arange(k.shape[-2], device=k.device)
             # Sum_j dP_ij P_ij = dot(dO_i, O_i).
             delta = (go * output).sum(-1, keepdim=True)
             for i in range(0, n, ctx.q_block_size):
@@ -76,10 +89,12 @@ class _BlockAttention(torch.autograd.Function):
                 lse = logsumexp[..., i:i + ctx.q_block_size, None]
                 lse = lse.masked_fill(torch.isneginf(lse), 0)
                 di = delta[..., i:i + ctx.q_block_size, :]
-                for j in range(0, min(i + ctx.q_block_size, k.shape[-2]), ctx.kv_block_size):
+                kv_stop = min(i + qi.shape[-2], k.shape[-2])
+                for j in range(0, kv_stop, ctx.kv_block_size):
                     kj = kf[..., j:j + ctx.kv_block_size, :]
                     vj = vf[..., j:j + ctx.kv_block_size, :]
-                    p = (_scores(qi, kj, i, j, scale, attn_mask) - lse).exp()
+                    p = (_scores(qi, kj, i, j, scale, query_positions,
+                                 key_positions, attn_mask) - lse).exp()
                     dp = doi @ vj.transpose(-2, -1)
                     ds = p * (dp - di)
                     if dm is not None:

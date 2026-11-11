@@ -1,0 +1,36 @@
+[
+  {
+    "length": 128,
+    "transposed": false,
+    "block_m": 64,
+    "block_n": 32,
+    "num_warps": 4,
+    "num_stages": 3,
+    "best": true,
+    "fwd_bwd_us": 20.64800076186657,
+    "main_us": 10.739388724266014,
+    "delta_us": 1.7240678228564181,
+    "zero_us": 1.162503193476052,
+    "cast_us": 1.6426666018863518,
+    "registers": 224,
+    "spills": 0,
+    "shared_bytes": 24576
+  },
+  {
+    "length": 512,
+    "transposed": false,
+    "block_m": 64,
+    "block_n": 32,
+    "num_warps": 4,
+    "num_stages": 1,
+    "best": true,
+    "fwd_bwd_us": 102.94856876134872,
+    "main_us": 67.32088989681667,
+    "delta_us": 3.1104739001720625,
+    "zero_us": 2.3267431117420236,
+    "cast_us": 2.753133848896177,
+    "registers": 224,
+    "spills": 0,
+    "shared_bytes": 24576
+  }
+]
