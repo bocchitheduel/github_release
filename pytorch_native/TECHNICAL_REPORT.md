@@ -1,12 +1,14 @@
 # CS336 Assignment 1 教学级语言模型技术报告
 
 编写日期：2026-11-11（Asia/Shanghai）<br>
-报告对象：当前模型实现、AdamW 与 Muon 训练结果、外部算子及注意力内核评估<br>
+报告对象：当前模型实现、AdamW 与 Muon 训练结果、Trisol 云端训练记录、外部算子及注意力内核评估<br>
 主要训练入口：[train_10k.py](train_10k.py)
 
 本项目实现了一套 21,655,040 参数的自回归语言模型，包含字节级 BPE、数据流水线、Transformer、AdamW/Muon 优化器、训练恢复、文本生成和 Gradio 演示界面。模型采用 4 层 Decoder Transformer，组合 RoPE、RMSNorm、SwiGLU 与因果多头注意力，主要面向 TinyStories 文本续写和语言模型系统教学。GitHub 发布目录保留教学实现与 PyTorch 原生算子实现两个版本；它们共享模型参数布局，但算子路径和性能数据需按版本区分。
 
 AdamW 历史 10,000 步运行处理了 327,680,000 个 token，抽样验证交叉熵为 1.376768。另一个 RMS 对齐 Muon+AdamW 10,000 步运行的验证交叉熵为 1.324593；它比 AdamW 基线低 0.052174。两者是独立运行，AdamW 旧记录未保存数据文件哈希，因此结果是有价值的对照证据，但不是多随机种子、逐字节确认数据完全相同的受控复现。
+
+Trisol 云端另有一场从随机初始化开始的 10,000 步 Muon+AdamW 训练，验证 loss 为 1.116261，处理约 5.243B token；云端任务记录显示它使用 **1 张 A100**。本次还核实到一场 **2 张 A100** 的 64 步 DDP 权重续训，从 step 10,000 到 10,064。可见的 Trisol 作业中没有找到 10,000 步双 A100 的训练记录；两项云端结果及检索范围见 [Trisol 训练记录](reports/trisol_training_records_20261111.md)。
 
 训练算子短基准显示，PyTorch SDPA、fused AdamW、foreach 梯度裁剪与内置交叉熵组合后吞吐量约提高 54%，峰值张量显存约降低 42%；该版本已放在 GitHub 的 `pytorch_native/`。另有独立 Triton 因果注意力内核评测，在 RTX 3070 Ti 上相对之前的本地 Triton 实现降低约 1.4%–7.5% 的前反向延迟；它目前仍是独立内核，不是模型的默认注意力实现。上述算子结果都不是新的完整训练收敛实验。
 
@@ -21,6 +23,7 @@ AdamW 历史 10,000 步运行处理了 327,680,000 个 token，抽样验证交�
 | 教学实现 | 自定义分块注意力、AdamW、梯度裁剪与交叉熵；Muon 路径可选 | 项目根目录源码；GitHub `original/` |
 | PyTorch 原生实现 | SDPA、PyTorch AdamW、foreach 梯度裁剪和内置交叉熵作为默认训练算子 | GitHub `pytorch_native/`；算子短基准见 [评估说明](assessments/external_libraries/assessment.md) |
 | 完整训练结果 | AdamW 历史 10k 运行，以及 RMS 对齐 Muon+AdamW 10k 运行 | [AdamW 记录](runs/b128_s256_10k_20261015_171649_473135/result.json)、[Muon 对照报告](reports/muon_adamw_rms_alignment_10000.md) |
+| Trisol 云端训练 | 从随机初始化完成的 10k Muon+AdamW（1×A100），以及 64 步 DDP 权重续训（2×A100） | [云端任务与指标摘要](reports/trisol_training_records_20261111.md)、[10k 指标 CSV](reports/trisol_muon_a100_10k_20261109_metrics.csv) |
 | 内核基准 | 独立测试 Triton 注意力及 Muon 更新实现；不等于默认模型训练路径 | [Triton 注意力报告](reports/attention_kv_optimization_20261111.md)、[Muon 内核报告](reports/muon_optimizer_kernel_memory_20261110.md) |
 
 历史运行记录中的 `MH_selfattention.py`、`block_attention.py` 和 `bpe.py` 哈希与当前文件不同。因此，历史 loss 表征该次训练的结果；当前实现的速度采用重新测量的数据。两者不能视为同一代码版本完成的一次实验。
@@ -301,6 +304,33 @@ CSV 的 `train_loss` 是最近日志区间的平均值；`train_loss_last_batch`
 
 100 个共同评估点中，Muon 在 97 点的验证 loss 低于 AdamW；按 10,000 步结果，Muon PPL 约为 3.76，AdamW 约为 3.96。该结果来自单次 seed 和抽样验证；旧 AdamW 运行没有记录原始数据 SHA-256，因此不能确认两个训练 run 使用的文件逐字节相同。它支持该配置值得复现，不足以证明 Muon 对其他 seed 或训练设置普遍占优。详细曲线和逐点数据见[对照报告](reports/muon_adamw_rms_alignment_10000.md)与[指标 CSV](reports/muon_adamw_rms_alignment_10000_metrics.csv)。
 
+### 7.2 Trisol 10,000 步 Muon + AdamW 训练
+
+Trisol 作业 `cs336-tiny-muon-b512-s1024-10k-20261109`（`2119631749209141248`）于 2026-11-09 成功完成 10,000 步。作业从 seed 42 随机初始化的模型开始，使用项目 Muon+AdamW 实现和 TinyStories 数据；云端任务详情将资源记为 **1 × NVIDIA A100-SXM4-80GB、world size 1**，并将训练结果注册为 `kasamura-cs336-tiny-b512-s1024-10k:1`。
+
+| 项目 | 云端记录 |
+| --- | ---: |
+| 有效 batch / microbatch / 梯度累积 | 512 / 128 / 4 |
+| 序列长度 | 1,024 |
+| 更新步数 / 处理 token | 10,000 / 5,242,880,000 |
+| 优化器 | RMS 对齐 Muon + AdamW；Muon 矩阵参数 12,451,840，AdamW 参数 9,203,200 |
+| 峰值学习率 / 调度 | Muon `0.002`、AdamW `0.001`；500 步 warmup 后余弦衰减 |
+| 末步训练 loss | 1.099443 |
+| step 10,000 的 Trisol 训练指标 | 1.090909 |
+| 验证 loss | 1.116261 |
+| 训练耗时 / 末段报告吞吐 | 11,169.8 秒 / 约 471,185 tokens/s |
+| GPU 监控 | 平均利用率约 98.3%；监测峰值显存 39,902,511,104 bytes（约 37.2 GiB） |
+
+末步训练 loss 与 Trisol `train/loss` 指标不是同一统计值：前者来自 `training_complete` 事件，后者来自 step 10,000 的进度指标。指标 API 每 100 步提供一条记录；已保存的云端指标快照见 [CSV](reports/trisol_muon_a100_10k_20261109_metrics.csv)。本次验证 loss 与本机的 256-token 验证设置、历史 AdamW/Muon 结果不构成严格对照：模型从随机初始化训练，序列长度、有效 batch、验证实现和代码打包版本均不同。费用 API 显示已结算，但没有返回最终金额；检查点没有下载到本地。
+
+### 7.3 Trisol 双 A100 DDP 权重续训
+
+作业 `cs336-tinystories-b256-s512-r2-20261107`（`2119016566531047424`）在两张 A100 上以 PyTorch DDP/NCCL 完成 64 步，从上传的 AdamW step 10,000 模型权重推进到 step 10,064。每卡 batch 为 256、序列长度 512，每次更新合计 262,144 个 token；新增 token 总量为 16,777,216。BF16 autocast 与 TF32 matmul 已启用，最后训练 loss 为 1.504097，单次抽样验证 loss 为 1.500642，训练计时约 53.97 秒。GPU 平均利用率约 73%，峰值显存约 41.26 GB。
+
+这次运行只加载了已有 checkpoint 的模型权重，训练脚本新建 AdamW 优化器，没有恢复原 AdamW 动量状态；因此它是从 step 10,000 权重开始的短续训/分布式验证，不是原训练的精确状态恢复。Trisol `train metrics` API 对该自定义任务返回 `no_metrics_reported_terminal`，以上 loss 与时长取自云端历史日志；checkpoint 归档为可恢复的 opaque/custom 格式，未下载或注册为可直接部署的模型版本。
+
+截至 2026-11-11，通过当前 Trisol 身份查询 `yh-team` 可见的 151 条作业，其中 14 条申请了两张 GPU。检索到的 10,000 步 TinyStories 任务是上文的一张 A100；未在当前可见任务中找到 10,000 步双 A100 的记录。该检索结果不能排除其他团队或身份下的记录，若找到对应任务 ID，应按其实际配置补充，不应将它与本节的 64 步双卡任务合并。
+
 ## 8. 推理模块评估与交互界面
 
 ### 8.1 当前推理路径与评估配置
@@ -576,6 +606,7 @@ OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
 | 推理评估证据 | [方法说明](assessments/inference/README.md)、[原始数据](assessments/inference/results.jsonl)、[汇总](assessments/inference/summary.json)、[文本样例](assessments/inference/samples.md)、[正确性检查](assessments/inference/contracts.json)、[源码哈希](assessments/inference/source_hashes.json) |
 | 新增 Muon 内核材料 | [更新精度评估](reports/muon_precision_update_20261110.md)、[时延与显存评估](reports/muon_optimizer_kernel_memory_20261110.md)、[同步开销评估](reports/muon_sync_benchmark_20261110.md)、[`muon_kernels.py`](muon_kernels.py) |
 | 新增 Triton 注意力材料 | [实现与结果](reports/attention_kv_optimization_20261111.md)、[最终基准数据](reports/attention_fa2_steady_20261111.json)、[最终 profile](reports/attention_kv_final_20261111.json)、[`block_attention_triton.py`](block_attention_triton.py) |
+| Trisol 云端训练记录 | [作业摘要、资源、指标口径](reports/trisol_training_records_20261111.md)、[10k 云端指标快照](reports/trisol_muon_a100_10k_20261109_metrics.csv) |
 
 ## 13. 2026-11-11 模型与内核更新
 
